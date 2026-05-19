@@ -8,711 +8,194 @@
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0c0f;
-    --surface: #111418;
-    --surface2: #181d24;
-    --border: #1e2530;
-    --border2: #2a3340;
-    --accent: #e8a020;
-    --accent2: #c47a10;
-    --text: #d0d8e4;
-    --text-dim: #6a7a8e;
-    --smoke: #4a9edd;
-    --flash: #f0e040;
-    --molly: #e84030;
-    --he: #60c060;
-    --font-main: 'Rajdhani', sans-serif;
-    --font-mono: 'Share Tech Mono', monospace;
+    --bg: #0a0c0f; --surface: #111418; --surface2: #181d24;
+    --border: #1e2530; --border2: #2a3340;
+    --accent: #e8a020; --accent2: #c47a10;
+    --text: #d0d8e4; --text-dim: #6a7a8e;
+    --smoke: #4a9edd; --flash: #f0e040; --molly: #e84030; --he: #60c060;
+    --font-main: 'Rajdhani', sans-serif; --font-mono: 'Share Tech Mono', monospace;
   }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:var(--font-main); min-height:100vh; overflow-x:hidden; }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  header { display:flex; align-items:center; justify-content:space-between; padding:0 24px; height:52px; background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
+  .logo { font-family:var(--font-mono); font-size:18px; color:var(--accent); letter-spacing:3px; text-transform:uppercase; }
+  .logo span { color:var(--text-dim); font-size:12px; margin-left:8px; letter-spacing:1px; }
+  .header-right { display:flex; gap:8px; align-items:center; }
+  .btn-admin { background:transparent; border:1px solid var(--border2); color:var(--text-dim); padding:6px 14px; font-family:var(--font-main); font-size:13px; font-weight:600; letter-spacing:1px; cursor:pointer; text-transform:uppercase; transition:all 0.15s; }
+  .btn-admin:hover { border-color:var(--accent); color:var(--accent); }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-main);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+  .app { display:flex; height:calc(100vh - 52px); }
 
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 24px;
-    height: 52px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
+  .sidebar { width:220px; min-width:220px; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow-y:auto; }
+  .sidebar-section { padding:16px; border-bottom:1px solid var(--border); }
+  .sidebar-label { font-family:var(--font-mono); font-size:10px; color:var(--text-dim); letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; }
+  .map-list { display:flex; flex-direction:column; gap:2px; }
+  .map-btn { background:transparent; border:none; color:var(--text-dim); padding:8px 10px; font-family:var(--font-main); font-size:15px; font-weight:600; cursor:pointer; text-align:left; border-left:2px solid transparent; transition:all 0.12s; display:flex; align-items:center; justify-content:space-between; }
+  .map-btn:hover { color:var(--text); background:var(--surface2); }
+  .map-btn.active { color:var(--accent); border-left-color:var(--accent); background:rgba(232,160,32,0.06); }
+  .map-btn .count { font-family:var(--font-mono); font-size:11px; color:var(--text-dim); background:var(--surface2); padding:1px 6px; border-radius:2px; }
+  .map-btn.active .count { color:var(--accent); }
 
-  .logo {
-    font-family: var(--font-mono);
-    font-size: 18px;
-    color: var(--accent);
-    letter-spacing: 3px;
-    text-transform: uppercase;
-  }
-  .logo span { color: var(--text-dim); font-size: 12px; margin-left: 8px; letter-spacing: 1px; }
+  .filter-list { display:flex; flex-direction:column; gap:2px; }
+  .filter-btn { background:transparent; border:none; color:var(--text-dim); padding:7px 10px; font-family:var(--font-main); font-size:14px; font-weight:500; cursor:pointer; text-align:left; border-left:2px solid transparent; transition:all 0.12s; display:flex; align-items:center; gap:8px; }
+  .filter-btn:hover { color:var(--text); background:var(--surface2); }
+  .filter-btn.active { color:var(--text); border-left-color:var(--text-dim); background:var(--surface2); }
+  .filter-btn .dot { width:6px; height:6px; border-radius:50%; background:var(--text-dim); flex-shrink:0; }
+  .filter-btn.active .dot { background:var(--text); }
+  .filter-btn.stage-new.active { color:#60c060; border-left-color:#60c060; }
+  .filter-btn.stage-new.active .dot { background:#60c060; }
+  .filter-btn.stage-refresh.active { color:#e8a020; border-left-color:#e8a020; }
+  .filter-btn.stage-refresh.active .dot { background:#e8a020; }
+  .filter-btn.stage-learnt.active { color:#6a7a8e; border-left-color:#6a7a8e; }
+  .filter-btn.stage-learnt.active .dot { background:#6a7a8e; }
 
-  .header-right { display: flex; gap: 8px; align-items: center; }
+  .nade-filters { display:flex; flex-direction:column; gap:2px; }
+  .nade-btn { background:transparent; border:none; color:var(--text-dim); padding:7px 10px; font-family:var(--font-main); font-size:14px; font-weight:600; cursor:pointer; text-align:left; border-left:2px solid transparent; transition:all 0.12s; display:flex; align-items:center; gap:10px; }
+  .nade-btn:hover { color:var(--text); background:var(--surface2); }
+  .nade-btn.active { background:var(--surface2); }
+  .nade-btn.active.smoke { color:var(--smoke); border-left-color:var(--smoke); }
+  .nade-btn.active.flash { color:var(--flash); border-left-color:var(--flash); }
+  .nade-btn.active.molly { color:var(--molly); border-left-color:var(--molly); }
+  .nade-btn.active.he { color:var(--he); border-left-color:var(--he); }
+  .nade-icon { width:20px; height:20px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 
-  .btn-admin {
-    background: transparent;
-    border: 1px solid var(--border2);
-    color: var(--text-dim);
-    padding: 6px 14px;
-    font-family: var(--font-main);
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: all 0.15s;
-  }
-  .btn-admin:hover { border-color: var(--accent); color: var(--accent); }
+  .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+  .topbar { height:44px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 16px; gap:16px; }
+  .topbar-info { font-family:var(--font-mono); font-size:12px; color:var(--text-dim); }
+  .topbar-info strong { color:var(--accent); font-weight:normal; }
+  .separator { width:1px; height:20px; background:var(--border2); }
 
-  .app {
-    display: flex;
-    height: calc(100vh - 52px);
-  }
+  .map-area { flex:1; position:relative; overflow:hidden; background:#080a0d; display:flex; align-items:center; justify-content:center; }
+  .map-placeholder { position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+  .map-image-container { position:relative; display:inline-block; }
+  .map-image { display:block; max-height:calc(100vh - 52px - 44px); max-width:100%; width:auto; height:auto; opacity:0.9; user-select:none; -webkit-user-drag:none; }
+  .map-overlay { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
 
-  .sidebar {
-    width: 220px;
-    min-width: 220px;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-  }
+  .ftm-state { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; width:100%; height:100%; }
+  .ftm-text { font-family:var(--font-mono); font-size:32px; color:var(--molly); letter-spacing:4px; text-transform:uppercase; opacity:0.7; }
+  .ftm-sub { font-family:var(--font-mono); font-size:12px; color:var(--text-dim); letter-spacing:2px; }
+  .no-map { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; color:var(--text-dim); font-family:var(--font-mono); font-size:13px; letter-spacing:2px; }
+  .no-map-icon { width:60px; height:60px; border:1px solid var(--border2); display:flex; align-items:center; justify-content:center; font-size:28px; opacity:0.4; }
 
-  .sidebar-section {
-    padding: 16px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .sidebar-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-dim);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-
-  .map-list { display: flex; flex-direction: column; gap: 2px; }
-
-  .map-btn {
-    background: transparent;
-    border: none;
-    color: var(--text-dim);
-    padding: 8px 10px;
-    font-family: var(--font-main);
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    text-align: left;
-    border-left: 2px solid transparent;
-    transition: all 0.12s;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .map-btn:hover { color: var(--text); background: var(--surface2); }
-  .map-btn.active { color: var(--accent); border-left-color: var(--accent); background: rgba(232,160,32,0.06); }
-  .map-btn .count {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    background: var(--surface2);
-    padding: 1px 6px;
-    border-radius: 2px;
-  }
-  .map-btn.active .count { color: var(--accent); }
-
-  .filter-list { display: flex; flex-direction: column; gap: 2px; }
-
-  .filter-btn {
-    background: transparent;
-    border: none;
-    color: var(--text-dim);
-    padding: 7px 10px;
-    font-family: var(--font-main);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    text-align: left;
-    border-left: 2px solid transparent;
-    transition: all 0.12s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .filter-btn:hover { color: var(--text); background: var(--surface2); }
-  .filter-btn.active { color: var(--text); border-left-color: var(--text-dim); background: var(--surface2); }
-  .filter-btn .dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--text-dim);
-    flex-shrink: 0;
-  }
-  .filter-btn.active .dot { background: var(--text); }
-
-  /* stage colors */
-  .filter-btn.stage-new.active { color: #60c060; border-left-color: #60c060; }
-  .filter-btn.stage-new.active .dot { background: #60c060; }
-  .filter-btn.stage-refresh.active { color: #e8a020; border-left-color: #e8a020; }
-  .filter-btn.stage-refresh.active .dot { background: #e8a020; }
-  .filter-btn.stage-learnt.active { color: #6a7a8e; border-left-color: #6a7a8e; }
-  .filter-btn.stage-learnt.active .dot { background: #6a7a8e; }
-
-  .nade-filters { display: flex; flex-direction: column; gap: 2px; }
-
-  .nade-btn {
-    background: transparent;
-    border: none;
-    color: var(--text-dim);
-    padding: 7px 10px;
-    font-family: var(--font-main);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    text-align: left;
-    border-left: 2px solid transparent;
-    transition: all 0.12s;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .nade-btn:hover { color: var(--text); background: var(--surface2); }
-  .nade-btn.active { background: var(--surface2); }
-  .nade-btn.active.smoke { color: var(--smoke); border-left-color: var(--smoke); }
-  .nade-btn.active.flash { color: var(--flash); border-left-color: var(--flash); }
-  .nade-btn.active.molly { color: var(--molly); border-left-color: var(--molly); }
-  .nade-btn.active.he { color: var(--he); border-left-color: var(--he); }
-
-  .nade-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-
-  .main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    position: relative;
-  }
-
-  .topbar {
-    height: 44px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    padding: 0 16px;
-    gap: 16px;
-  }
-
-  .topbar-info {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-dim);
-  }
-  .topbar-info strong { color: var(--accent); font-weight: normal; }
-
-  .separator { width: 1px; height: 20px; background: var(--border2); }
-
-  .map-area {
-    flex: 1;
-    position: relative;
-    overflow: hidden;
-    background: #080a0d;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .map-placeholder {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .map-image-container {
-    position: relative;
-    display: inline-block;
-  }
-
-  .map-image {
-    display: block;
-    max-height: calc(100vh - 52px - 44px);
-    max-width: 100%;
-    width: auto;
-    height: auto;
-    opacity: 0.9;
-    user-select: none;
-    -webkit-user-drag: none;
-  }
-
-  .map-overlay {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    pointer-events: none;
-  }
-
-  /* FUCK THAT MAP state */
-  .ftm-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    width: 100%;
-    height: 100%;
-  }
-  .ftm-text {
-    font-family: var(--font-mono);
-    font-size: 32px;
-    color: var(--molly);
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    opacity: 0.7;
-  }
-  .ftm-sub {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-dim);
-    letter-spacing: 2px;
-  }
-
-  .marker {
-    position: absolute;
-    transform: translate(-50%, -50%);
-    cursor: pointer;
-    pointer-events: all;
-    z-index: 10;
-    transition: transform 0.1s, filter 0.1s;
-  }
-  .marker:hover { transform: translate(-50%, -50%) scale(1.25); filter: brightness(1.3); z-index: 20; }
-
-  .marker-inner {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid rgba(255,255,255,0.15);
-    box-shadow: 0 0 10px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.4);
-    font-size: 14px;
-    position: relative;
-  }
-
-  .marker-inner::after {
-    content: '';
-    position: absolute;
-    inset: -4px;
-    border-radius: 50%;
-    border: 1px solid currentColor;
-    opacity: 0.3;
-    animation: pulse 2s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 0.3; }
-    50% { transform: scale(1.2); opacity: 0.1; }
-  }
-
-  .marker.smoke .marker-inner { background: rgba(74,158,221,0.85); color: #fff; border-color: var(--smoke); }
-  .marker.flash .marker-inner { background: rgba(240,224,64,0.85); color: #111; border-color: var(--flash); }
-  .marker.molly .marker-inner { background: rgba(232,64,48,0.85); color: #fff; border-color: var(--molly); }
-  .marker.he .marker-inner { background: rgba(96,192,96,0.85); color: #fff; border-color: var(--he); }
-
-  .no-map {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    color: var(--text-dim);
-    font-family: var(--font-mono);
-    font-size: 13px;
-    letter-spacing: 2px;
-  }
-  .no-map-icon {
-    width: 60px; height: 60px;
-    border: 1px solid var(--border2);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 28px;
-    opacity: 0.4;
-  }
+  .marker { position:absolute; transform:translate(-50%,-50%); cursor:pointer; pointer-events:all; z-index:10; transition:transform 0.1s, filter 0.1s; }
+  .marker:hover { transform:translate(-50%,-50%) scale(1.25); filter:brightness(1.3); z-index:20; }
+  .marker-inner { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid rgba(255,255,255,0.15); box-shadow:0 0 10px rgba(0,0,0,0.6); position:relative; }
+  .marker-inner::after { content:''; position:absolute; inset:-4px; border-radius:50%; border:1px solid currentColor; opacity:0.3; animation:pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { transform:scale(1); opacity:0.3; } 50% { transform:scale(1.2); opacity:0.1; } }
+  .marker.smoke .marker-inner { background:rgba(74,158,221,0.85); border-color:var(--smoke); }
+  .marker.flash .marker-inner { background:rgba(240,224,64,0.85); border-color:var(--flash); }
+  .marker.molly .marker-inner { background:rgba(232,64,48,0.85); border-color:var(--molly); }
+  .marker.he .marker-inner { background:rgba(96,192,96,0.85); border-color:var(--he); }
 
   /* MODAL */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    z-index: 1000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(4px);
-  }
-  .modal-overlay.open { display: flex; }
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; display:none; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--surface); border:1px solid var(--border2); width:720px; max-width:95vw; max-height:90vh; display:flex; flex-direction:column; box-shadow:0 24px 80px rgba(0,0,0,0.8); }
 
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    width: 720px;
-    max-width: 95vw;
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 24px 80px rgba(0,0,0,0.8);
-  }
+  .modal-header { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .modal-header-left { flex:1; min-width:0; }
+  .modal-title { font-size:18px; font-weight:700; letter-spacing:1px; color:var(--text); }
+  .modal-meta { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px; }
+  .modal-header-actions { display:flex; gap:6px; align-items:center; flex-shrink:0; }
 
-  .modal-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
+  .badge { font-family:var(--font-mono); font-size:11px; padding:3px 8px; border:1px solid; text-transform:uppercase; letter-spacing:1px; }
+  .badge.smoke { color:var(--smoke); border-color:var(--smoke); background:rgba(74,158,221,0.1); }
+  .badge.flash { color:var(--flash); border-color:var(--flash); background:rgba(240,224,64,0.1); }
+  .badge.molly { color:var(--molly); border-color:var(--molly); background:rgba(232,64,48,0.1); }
+  .badge.he { color:var(--he); border-color:var(--he); background:rgba(96,192,96,0.1); }
+  .badge.seg { color:var(--text-dim); border-color:var(--border2); }
 
-  .modal-title {
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    color: var(--text);
-  }
+  /* STAGE SWITCHER */
+  .stage-switcher { display:flex; gap:6px; margin-top:10px; }
+  .stage-switch-btn { flex:1; padding:5px 0; text-align:center; font-family:var(--font-mono); font-size:11px; letter-spacing:1px; text-transform:uppercase; border:1px solid var(--border2); cursor:pointer; color:var(--text-dim); background:var(--surface2); transition:all 0.12s; }
+  .stage-switch-btn:hover { border-color:var(--text-dim); color:var(--text); }
+  .stage-switch-btn.active-new { color:#60c060; border-color:#60c060; background:rgba(96,192,96,0.1); }
+  .stage-switch-btn.active-refresh { color:#e8a020; border-color:#e8a020; background:rgba(232,160,32,0.1); }
+  .stage-switch-btn.active-learnt { color:#6a7a8e; border-color:#6a7a8e; background:rgba(106,122,142,0.15); }
 
-  .modal-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .modal-close { background:transparent; border:1px solid var(--border2); color:var(--text-dim); width:32px; height:32px; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.12s; }
+  .modal-close:hover { border-color:var(--molly); color:var(--molly); }
+  .btn-edit-modal { background:transparent; border:1px solid var(--border2); color:var(--text-dim); padding:0 12px; height:32px; cursor:pointer; font-family:var(--font-mono); font-size:11px; letter-spacing:1px; text-transform:uppercase; transition:all 0.12s; white-space:nowrap; }
+  .btn-edit-modal:hover { border-color:var(--accent); color:var(--accent); }
+  .btn-delete-modal { background:transparent; border:1px solid var(--border2); color:var(--text-dim); padding:0 12px; height:32px; cursor:pointer; font-family:var(--font-mono); font-size:11px; letter-spacing:1px; text-transform:uppercase; transition:all 0.12s; white-space:nowrap; }
+  .btn-delete-modal:hover { border-color:var(--molly); color:var(--molly); }
 
-  .badge {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    padding: 3px 8px;
-    border: 1px solid;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-  .badge.smoke { color: var(--smoke); border-color: var(--smoke); background: rgba(74,158,221,0.1); }
-  .badge.flash { color: var(--flash); border-color: var(--flash); background: rgba(240,224,64,0.1); }
-  .badge.molly { color: var(--molly); border-color: var(--molly); background: rgba(232,64,48,0.1); }
-  .badge.he { color: var(--he); border-color: var(--he); background: rgba(96,192,96,0.1); }
-  .badge.seg { color: var(--text-dim); border-color: var(--border2); }
-  .badge.stage-new { color: #60c060; border-color: #60c060; background: rgba(96,192,96,0.1); }
-  .badge.stage-refresh { color: #e8a020; border-color: #e8a020; background: rgba(232,160,32,0.1); }
-  .badge.stage-learnt { color: #6a7a8e; border-color: #6a7a8e; background: rgba(106,122,142,0.1); }
+  .modal-body { padding:20px; overflow-y:auto; flex:1; }
 
-  .modal-close {
-    background: transparent;
-    border: 1px solid var(--border2);
-    color: var(--text-dim);
-    width: 32px; height: 32px;
-    cursor: pointer;
-    font-size: 16px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    transition: all 0.12s;
-  }
-  .modal-close:hover { border-color: var(--molly); color: var(--molly); }
+  /* VIEW MODE */
+  .modal-view { display:block; }
+  .modal-edit { display:none; }
+  .modal.editing .modal-view { display:none; }
+  .modal.editing .modal-edit { display:block; }
 
-  .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+  .modal-media { width:100%; background:#000; aspect-ratio:16/9; display:flex; align-items:center; justify-content:center; margin-bottom:12px; position:relative; overflow:hidden; }
+  .modal-media video, .modal-media img, .modal-media iframe { width:100%; height:100%; object-fit:contain; }
+  .modal-media .no-media { color:var(--text-dim); font-family:var(--font-mono); font-size:12px; letter-spacing:2px; text-align:center; }
 
-  .modal-media {
-    width: 100%;
-    background: #000;
-    aspect-ratio: 16/9;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 16px;
-    position: relative;
-    overflow: hidden;
-  }
-  .modal-media video, .modal-media img, .modal-media iframe { width: 100%; height: 100%; object-fit: contain; }
-  .modal-media .no-media {
-    color: var(--text-dim);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    letter-spacing: 2px;
-    text-align: center;
-  }
+  .gallery-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .gallery-counter { font-family:var(--font-mono); font-size:12px; color:var(--text-dim); letter-spacing:1px; }
+  .gallery-btns { display:flex; gap:6px; }
+  .gallery-btn { background:transparent; border:1px solid var(--border2); color:var(--text-dim); width:32px; height:32px; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; transition:all 0.12s; }
+  .gallery-btn:hover:not(:disabled) { border-color:var(--accent); color:var(--accent); }
+  .gallery-btn:disabled { opacity:0.3; cursor:default; }
+  .gallery-dots { display:flex; gap:6px; justify-content:center; margin-bottom:12px; flex-wrap:wrap; }
+  .gallery-dot { width:8px; height:8px; border-radius:50%; background:var(--border2); cursor:pointer; transition:background 0.12s; border:none; padding:0; }
+  .gallery-dot.active { background:var(--accent); }
 
-  .modal-notes {
-    font-size: 15px;
-    color: var(--text-dim);
-    line-height: 1.6;
-    padding: 12px;
-    background: var(--surface2);
-    border-left: 2px solid var(--border2);
-  }
+  .modal-notes { font-size:15px; color:var(--text-dim); line-height:1.6; padding:12px; background:var(--surface2); border-left:2px solid var(--border2); }
 
-  /* ADMIN */
-  .admin-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    z-index: 2000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(4px);
-  }
-  .admin-overlay.open { display: flex; }
+  /* EDIT FORM inside modal */
+  .edit-form { display:flex; flex-direction:column; gap:14px; }
+  .form-group { display:flex; flex-direction:column; gap:6px; }
+  .form-label { font-family:var(--font-mono); font-size:10px; color:var(--text-dim); letter-spacing:2px; text-transform:uppercase; }
+  .form-input, .form-select, .form-textarea { background:var(--surface2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-family:var(--font-main); font-size:14px; outline:none; transition:border-color 0.12s; width:100%; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color:var(--accent); }
+  .form-select { cursor:pointer; }
+  .form-textarea { resize:vertical; min-height:60px; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .coord-hint { font-family:var(--font-mono); font-size:11px; color:var(--text-dim); margin-top:4px; }
 
-  .admin-panel {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    width: 560px;
-    max-width: 95vw;
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 24px 80px rgba(0,0,0,0.8);
-    overflow-y: auto;
-  }
+  .media-type-toggle { display:flex; gap:0; }
+  .media-type-btn { flex:1; padding:7px 0; text-align:center; font-family:var(--font-mono); font-size:11px; letter-spacing:1px; text-transform:uppercase; border:1px solid var(--border2); cursor:pointer; color:var(--text-dim); background:var(--surface2); transition:all 0.12s; }
+  .media-type-btn:first-child { border-right:none; }
+  .media-type-btn.active { color:var(--accent); border-color:var(--accent); background:rgba(232,160,32,0.08); }
 
-  .admin-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    background: var(--surface);
-    z-index: 1;
-  }
+  .image-url-list { display:flex; flex-direction:column; gap:6px; }
+  .image-url-row { display:flex; gap:6px; align-items:center; }
+  .image-url-row input { flex:1; }
+  .btn-remove-img { background:transparent; border:1px solid var(--border2); color:var(--text-dim); width:30px; height:34px; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.12s; }
+  .btn-remove-img:hover { border-color:var(--molly); color:var(--molly); }
+  .btn-add-img { background:transparent; border:1px dashed var(--border2); color:var(--text-dim); padding:6px 12px; font-family:var(--font-mono); font-size:11px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; width:100%; transition:all 0.12s; margin-top:4px; }
+  .btn-add-img:hover { border-color:var(--accent); color:var(--accent); }
 
-  .admin-title {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--accent);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
+  .coord-picker-area { position:relative; width:100%; background:#000; border:1px solid var(--border2); cursor:crosshair; overflow:hidden; margin-top:4px; }
+  .coord-picker-area img { width:100%; display:block; opacity:0.8; pointer-events:none; user-select:none; }
+  .coord-crosshair { position:absolute; transform:translate(-50%,-50%); width:16px; height:16px; border:2px solid var(--accent); border-radius:50%; pointer-events:none; display:none; }
+  .coord-crosshair::after { content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:4px; height:4px; background:var(--accent); border-radius:50%; }
+  .map-select-hint { font-family:var(--font-mono); font-size:11px; color:var(--text-dim); padding:20px; text-align:center; border:1px dashed var(--border2); }
 
-  .admin-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .edit-footer { display:flex; gap:8px; justify-content:flex-end; margin-top:4px; padding-top:14px; border-top:1px solid var(--border); }
+  .btn-primary { background:var(--accent); border:none; color:#000; padding:8px 20px; font-family:var(--font-main); font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:background 0.12s; }
+  .btn-primary:hover { background:var(--accent2); }
+  .btn-secondary { background:transparent; border:1px solid var(--border2); color:var(--text-dim); padding:8px 20px; font-family:var(--font-main); font-size:14px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.12s; }
+  .btn-secondary:hover { border-color:var(--text-dim); color:var(--text); }
 
-  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  /* ADD LINEUP PANEL */
+  .admin-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:2000; display:none; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+  .admin-overlay.open { display:flex; }
+  .admin-panel { background:var(--surface); border:1px solid var(--border2); width:560px; max-width:95vw; max-height:90vh; display:flex; flex-direction:column; box-shadow:0 24px 80px rgba(0,0,0,0.8); overflow-y:auto; }
+  .admin-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; background:var(--surface); z-index:1; }
+  .admin-title { font-family:var(--font-mono); font-size:13px; color:var(--accent); letter-spacing:2px; text-transform:uppercase; }
+  .admin-body { padding:20px; display:flex; flex-direction:column; gap:14px; }
+  .admin-footer { padding:16px 20px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; }
 
-  .form-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-dim);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
+  .export-box { background:var(--surface2); border:1px solid var(--border2); padding:12px; font-family:var(--font-mono); font-size:11px; color:var(--text-dim); white-space:pre; overflow-x:auto; max-height:200px; overflow-y:auto; }
 
-  .form-input, .form-select, .form-textarea {
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    color: var(--text);
-    padding: 8px 12px;
-    font-family: var(--font-main);
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.12s;
-    width: 100%;
-  }
-  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
-  .form-select { cursor: pointer; }
-  .form-textarea { resize: vertical; min-height: 80px; }
-
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-  .coord-hint {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    margin-top: 4px;
-  }
-
-  .admin-footer {
-    padding: 16px 20px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-  }
-
-  .btn-primary {
-    background: var(--accent);
-    border: none;
-    color: #000;
-    padding: 8px 20px;
-    font-family: var(--font-main);
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: background 0.12s;
-  }
-  .btn-primary:hover { background: var(--accent2); }
-
-  .btn-secondary {
-    background: transparent;
-    border: 1px solid var(--border2);
-    color: var(--text-dim);
-    padding: 8px 20px;
-    font-family: var(--font-main);
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.12s;
-  }
-  .btn-secondary:hover { border-color: var(--text-dim); color: var(--text); }
-
-  .lineup-list { margin-top: 8px; }
-
-  .lineup-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 10px;
-    border: 1px solid var(--border);
-    margin-bottom: 4px;
-    background: var(--surface2);
-    font-size: 14px;
-  }
-  .lineup-item-info { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .lineup-item-name { font-weight: 600; }
-  .lineup-item-meta { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
-
-  .btn-delete {
-    background: transparent;
-    border: 1px solid transparent;
-    color: var(--text-dim);
-    padding: 3px 8px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    cursor: pointer;
-    transition: all 0.12s;
-    flex-shrink: 0;
-  }
-  .btn-delete:hover { border-color: var(--molly); color: var(--molly); }
-
-  .coord-picker-area {
-    position: relative;
-    width: 100%;
-    background: #000;
-    border: 1px solid var(--border2);
-    cursor: crosshair;
-    overflow: hidden;
-    margin-top: 4px;
-  }
-  .coord-picker-area img {
-    width: 100%;
-    display: block;
-    opacity: 0.8;
-    pointer-events: none;
-    user-select: none;
-  }
-
-  .coord-crosshair {
-    position: absolute;
-    transform: translate(-50%, -50%);
-    width: 16px; height: 16px;
-    border: 2px solid var(--accent);
-    border-radius: 50%;
-    pointer-events: none;
-    display: none;
-  }
-  .coord-crosshair::after {
-    content: '';
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 4px; height: 4px;
-    background: var(--accent);
-    border-radius: 50%;
-  }
-
-  .map-select-hint {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    padding: 20px;
-    text-align: center;
-    border: 1px dashed var(--border2);
-  }
-
-  .admin-tabs {
-    display: flex;
-    border-bottom: 1px solid var(--border);
-    padding: 0 20px;
-  }
-
-  .admin-tab {
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    color: var(--text-dim);
-    padding: 10px 16px;
-    font-family: var(--font-main);
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    margin-bottom: -1px;
-    transition: all 0.12s;
-  }
-  .admin-tab:hover { color: var(--text); }
-  .admin-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-  .admin-tab-content { display: none; }
-  .admin-tab-content.active { display: flex; flex-direction: column; gap: 14px; }
-
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
-
-  .export-box {
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    padding: 12px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    white-space: pre;
-    overflow-x: auto;
-    max-height: 200px;
-    overflow-y: auto;
-  }
-
-  /* stage selector in admin form */
-  .stage-selector { display: flex; gap: 8px; }
-  .stage-opt {
-    flex: 1;
-    padding: 7px 0;
-    text-align: center;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    border: 1px solid var(--border2);
-    cursor: pointer;
-    color: var(--text-dim);
-    background: var(--surface2);
-    transition: all 0.12s;
-  }
-  .stage-opt.active-new { color: #60c060; border-color: #60c060; background: rgba(96,192,96,0.1); }
-  .stage-opt.active-refresh { color: #e8a020; border-color: #e8a020; background: rgba(232,160,32,0.1); }
-  .stage-opt.active-learnt { color: #6a7a8e; border-color: #6a7a8e; background: rgba(106,122,142,0.15); }
+  ::-webkit-scrollbar { width:4px; height:4px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+  ::-webkit-scrollbar-thumb:hover { background:var(--text-dim); }
 </style>
 </head>
 <body>
@@ -730,34 +213,27 @@
       <div class="sidebar-label">// MAP</div>
       <div class="map-list" id="mapList"></div>
     </div>
-
     <div class="sidebar-section">
       <div class="sidebar-label">// NADE TYPE</div>
-      <div class="nade-filters" id="nadeFilters">
+      <div class="nade-filters">
         <button class="nade-btn smoke active" data-type="smoke" onclick="toggleNadeFilter('smoke')">
-          <span class="nade-icon"><img src="images/Smoke2.png" width="18" height="18" style="object-fit:contain;opacity:0.9"></span>
-          SMOKE
+          <span class="nade-icon"><img src="images/Smoke2.png" width="18" height="18" style="object-fit:contain;opacity:0.9"></span>SMOKE
         </button>
         <button class="nade-btn flash active" data-type="flash" onclick="toggleNadeFilter('flash')">
-          <span class="nade-icon"><img src="images/Flashbang.png" width="18" height="18" style="object-fit:contain;opacity:0.9"></span>
-          FLASH
+          <span class="nade-icon"><img src="images/Flashbang.png" width="18" height="18" style="object-fit:contain;opacity:0.9"></span>FLASH
         </button>
         <button class="nade-btn molly active" data-type="molly" onclick="toggleNadeFilter('molly')">
-          <span class="nade-icon"><img src="images/Molotov.png" width="18" height="18" style="object-fit:contain;opacity:0.9"></span>
-          MOLLY
+          <span class="nade-icon"><img src="images/Molotov.png" width="18" height="18" style="object-fit:contain;opacity:0.9"></span>MOLLY
         </button>
         <button class="nade-btn he active" data-type="he" onclick="toggleNadeFilter('he')">
-          <span class="nade-icon"><img src="images/HEgrenade.png" width="18" height="18" style="object-fit:contain;opacity:0.9"></span>
-          HE NADE
+          <span class="nade-icon"><img src="images/HEgrenade.png" width="18" height="18" style="object-fit:contain;opacity:0.9"></span>HE NADE
         </button>
       </div>
     </div>
-
     <div class="sidebar-section">
       <div class="sidebar-label">// SEGMENT</div>
       <div class="filter-list" id="segmentList"></div>
     </div>
-
     <div class="sidebar-section">
       <div class="sidebar-label">// STAGE</div>
       <div class="filter-list" id="stageList"></div>
@@ -772,12 +248,8 @@
       <div class="separator"></div>
       <span class="topbar-info">FILTER: <strong id="topbarFilter">ALL</strong></span>
     </div>
-
-    <div class="map-area" id="mapArea">
-      <div class="no-map" id="noMapMsg">
-        <div class="no-map-icon">&#8853;</div>
-        SELECT MAP
-      </div>
+    <div class="map-area">
+      <div class="no-map" id="noMapMsg"><div class="no-map-icon">&#8853;</div>SELECT MAP</div>
       <div class="map-placeholder" id="mapPlaceholder" style="display:none">
         <div class="map-image-container" id="mapImageContainer">
           <img class="map-image" id="mapImage" src="" alt="map">
@@ -790,117 +262,139 @@
 
 <!-- LINEUP MODAL -->
 <div class="modal-overlay" id="lineupModal" onclick="closeModalOutside(event)">
-  <div class="modal">
+  <div class="modal" id="modalInner">
     <div class="modal-header">
-      <div>
+      <div class="modal-header-left">
         <div class="modal-title" id="modalTitle">-</div>
-        <div class="modal-meta" style="margin-top:6px">
+        <div class="modal-meta">
           <span class="badge" id="modalTypeBadge"></span>
           <span class="badge seg" id="modalSegBadge"></span>
           <span class="badge seg" id="modalMapBadge"></span>
-          <span class="badge" id="modalStageBadge"></span>
+        </div>
+        <div class="stage-switcher">
+          <button class="stage-switch-btn" id="stageBtnNew" onclick="setLineupStage('new')">New</button>
+          <button class="stage-switch-btn" id="stageBtnRefresh" onclick="setLineupStage('refresh')">Refresh</button>
+          <button class="stage-switch-btn" id="stageBtnLearnt" onclick="setLineupStage('learnt')">Learnt</button>
         </div>
       </div>
-      <button class="modal-close" onclick="closeModal()">&#10005;</button>
+      <div class="modal-header-actions">
+        <button class="btn-edit-modal" id="editToggleBtn" onclick="toggleEditMode()">EDIT</button>
+        <button class="btn-delete-modal" onclick="deleteCurrentLineup()">DELETE</button>
+        <button class="modal-close" onclick="closeModal()">&#10005;</button>
+      </div>
     </div>
     <div class="modal-body">
-      <div class="modal-media" id="modalMedia">
-        <div class="no-media">NO MEDIA ATTACHED</div>
+      <!-- VIEW MODE -->
+      <div class="modal-view">
+        <div class="modal-media" id="modalMedia"></div>
+        <div id="galleryNav" style="display:none">
+          <div class="gallery-dots" id="galleryDots"></div>
+          <div class="gallery-nav">
+            <span class="gallery-counter" id="galleryCounter"></span>
+            <div class="gallery-btns">
+              <button class="gallery-btn" id="galleryPrev" onclick="galleryMove(-1)">&#8592;</button>
+              <button class="gallery-btn" id="galleryNext" onclick="galleryMove(1)">&#8594;</button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-notes" id="modalNotes" style="display:none"></div>
       </div>
-      <div class="modal-notes" id="modalNotes" style="display:none"></div>
+
+      <!-- EDIT MODE -->
+      <div class="modal-edit">
+        <div class="edit-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">MAP</label>
+              <select class="form-select" id="editMap">
+                <option value="mirage">Mirage</option>
+                <option value="inferno">Inferno</option>
+                <option value="nuke">Nuke</option>
+                <option value="ancient">Ancient</option>
+                <option value="anubis">Anubis</option>
+                <option value="cache">Cache</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">NADE TYPE</label>
+              <select class="form-select" id="editType">
+                <option value="smoke">Smoke</option>
+                <option value="flash">Flash</option>
+                <option value="molly">Molly</option>
+                <option value="he">HE Nade</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">NAME</label>
+            <input class="form-input" id="editName" type="text" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">SEGMENT</label>
+              <select class="form-select" id="editSeg">
+                <option value="execute">Execute</option>
+                <option value="retake">Retake</option>
+                <option value="instant_smokes">Instant smokes</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">STAGE</label>
+              <select class="form-select" id="editStage">
+                <option value="new">New</option>
+                <option value="refresh">Refresh</option>
+                <option value="learnt">Learnt</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">MEDIA TYPE</label>
+            <div class="media-type-toggle">
+              <button class="media-type-btn" id="editMediaTypeVideo" onclick="switchEditMediaType('video')">VIDEO</button>
+              <button class="media-type-btn" id="editMediaTypeImages" onclick="switchEditMediaType('images')">IMAGES</button>
+            </div>
+          </div>
+          <div id="editVideoField" class="form-group">
+            <label class="form-label">VIDEO URL</label>
+            <input class="form-input" id="editVideo" type="text" placeholder="https://youtube.com/watch?v=..." />
+          </div>
+          <div id="editImagesField" class="form-group" style="display:none">
+            <label class="form-label">IMAGE URLS (in order, max 10)</label>
+            <div class="image-url-list" id="editImageUrlList"></div>
+            <button class="btn-add-img" onclick="addEditImageRow()">+ ADD IMAGE</button>
+          </div>
+          <div class="form-group">
+            <label class="form-label">NOTES</label>
+            <textarea class="form-textarea" id="editNotes"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">POSITION ON MAP - click to reposition</label>
+            <div id="editMapPickerWrap"></div>
+            <div class="coord-hint">X: <span id="editCoordX">-</span> &nbsp; Y: <span id="editCoordY">-</span></div>
+          </div>
+          <div class="edit-footer">
+            <button class="btn-secondary" onclick="cancelEdit()">CANCEL</button>
+            <button class="btn-primary" onclick="saveEdit()">SAVE CHANGES</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ADMIN PANEL -->
+<!-- ADD LINEUP PANEL -->
 <div class="admin-overlay" id="adminPanel" onclick="closeAdminOutside(event)">
   <div class="admin-panel">
     <div class="admin-header">
-      <div class="admin-title">// LINEUP MANAGER</div>
+      <div class="admin-title">// ADD LINEUP</div>
       <button class="modal-close" onclick="closeAdmin()">&#10005;</button>
     </div>
-
-    <div class="admin-tabs">
-      <button class="admin-tab active" onclick="switchTab('add')">ADD NEW</button>
-      <button class="admin-tab" onclick="switchTab('manage')">MANAGE</button>
-      <button class="admin-tab" onclick="switchTab('export')">EXPORT JSON</button>
-    </div>
-
     <div class="admin-body">
-
-      <div class="admin-tab-content active" id="tabAdd">
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">MAP</label>
-            <select class="form-select" id="adminMap" onchange="updateAdminMapPreview()">
-              <option value="">-- select --</option>
-              <option value="mirage">Mirage</option>
-              <option value="inferno">Inferno</option>
-              <option value="nuke">Nuke</option>
-              <option value="ancient">Ancient</option>
-              <option value="anubis">Anubis</option>
-              <option value="cache">Cache</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">NADE TYPE</label>
-            <select class="form-select" id="adminType">
-              <option value="smoke">Smoke</option>
-              <option value="flash">Flash</option>
-              <option value="molly">Molly</option>
-              <option value="he">HE Nade</option>
-            </select>
-          </div>
-        </div>
-
+      <div class="form-row">
         <div class="form-group">
-          <label class="form-label">NAME</label>
-          <input class="form-input" id="adminName" type="text" placeholder="e.g. A-site default smoke" />
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">SEGMENT</label>
-            <select class="form-select" id="adminSeg">
-              <option value="execute">Execute</option>
-              <option value="retake">Retake</option>
-              <option value="instant_smokes">Instant smokes</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">STAGE</label>
-            <select class="form-select" id="adminStage">
-              <option value="new">New</option>
-              <option value="refresh">Refresh</option>
-              <option value="learnt">Learnt</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">MEDIA (YouTube URL or direct video/image URL)</label>
-          <input class="form-input" id="adminMedia" type="text" placeholder="https://youtube.com/watch?v=... or https://...mp4" />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">NOTES (optional)</label>
-          <textarea class="form-textarea" id="adminNotes" placeholder="Description, timing, where to stand..."></textarea>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">POSITION ON MAP - click to place marker</label>
-          <div id="adminMapPickerWrap">
-            <div class="map-select-hint" id="mapPickerHint">Select a map first</div>
-          </div>
-          <div class="coord-hint">X: <span id="coordX">-</span> &nbsp; Y: <span id="coordY">-</span></div>
-        </div>
-      </div>
-
-      <div class="admin-tab-content" id="tabManage">
-        <div class="form-group">
-          <label class="form-label">FILTER BY MAP</label>
-          <select class="form-select" id="manageMapFilter" onchange="renderManageList()">
-            <option value="">All maps</option>
+          <label class="form-label">MAP</label>
+          <select class="form-select" id="adminMap" onchange="updateAdminMapPreview()">
+            <option value="">-- select --</option>
             <option value="mirage">Mirage</option>
             <option value="inferno">Inferno</option>
             <option value="nuke">Nuke</option>
@@ -909,20 +403,70 @@
             <option value="cache">Cache</option>
           </select>
         </div>
-        <div class="lineup-list" id="manageLineupList"></div>
+        <div class="form-group">
+          <label class="form-label">NADE TYPE</label>
+          <select class="form-select" id="adminType">
+            <option value="smoke">Smoke</option>
+            <option value="flash">Flash</option>
+            <option value="molly">Molly</option>
+            <option value="he">HE Nade</option>
+          </select>
+        </div>
       </div>
-
-      <div class="admin-tab-content" id="tabExport">
-        <p style="font-size:13px; color:var(--text-dim); line-height:1.6;">
-          Copy this JSON and save as <code style="color:var(--accent)">data/lineups.json</code> in your project.
-        </p>
-        <div class="export-box" id="exportBox"></div>
-        <button class="btn-secondary" onclick="copyExport()">COPY JSON</button>
+      <div class="form-group">
+        <label class="form-label">NAME</label>
+        <input class="form-input" id="adminName" type="text" placeholder="e.g. A-site default smoke" />
       </div>
-
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">SEGMENT</label>
+          <select class="form-select" id="adminSeg">
+            <option value="execute">Execute</option>
+            <option value="retake">Retake</option>
+            <option value="instant_smokes">Instant smokes</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">STAGE</label>
+          <select class="form-select" id="adminStage">
+            <option value="new">New</option>
+            <option value="refresh">Refresh</option>
+            <option value="learnt">Learnt</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">MEDIA TYPE</label>
+        <div class="media-type-toggle">
+          <button class="media-type-btn active" id="adminMediaTypeVideo" onclick="switchAdminMediaType('video')">VIDEO</button>
+          <button class="media-type-btn" id="adminMediaTypeImages" onclick="switchAdminMediaType('images')">IMAGES</button>
+        </div>
+      </div>
+      <div id="adminVideoField" class="form-group">
+        <label class="form-label">VIDEO URL (YouTube or direct .mp4)</label>
+        <input class="form-input" id="adminVideo" type="text" placeholder="https://youtube.com/watch?v=..." />
+      </div>
+      <div id="adminImagesField" class="form-group" style="display:none">
+        <label class="form-label">IMAGE URLS (in order, max 10)</label>
+        <div class="image-url-list" id="adminImageUrlList">
+          <div class="image-url-row">
+            <input class="form-input" type="text" placeholder="https://... image URL #1" />
+            <button class="btn-remove-img" onclick="removeImageRow(this,'adminImageUrlList')">&#10005;</button>
+          </div>
+        </div>
+        <button class="btn-add-img" onclick="addImageRow('adminImageUrlList')">+ ADD IMAGE</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">NOTES (optional)</label>
+        <textarea class="form-textarea" id="adminNotes" placeholder="Description, timing, where to stand..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">POSITION ON MAP - click to place marker</label>
+        <div id="adminMapPickerWrap"><div class="map-select-hint">Select a map first</div></div>
+        <div class="coord-hint">X: <span id="coordX">-</span> &nbsp; Y: <span id="coordY">-</span></div>
+      </div>
     </div>
-
-    <div class="admin-footer" id="adminFooter">
+    <div class="admin-footer">
       <button class="btn-secondary" onclick="closeAdmin()">CANCEL</button>
       <button class="btn-primary" onclick="saveLineup()">SAVE LINEUP</button>
     </div>
@@ -931,59 +475,49 @@
 
 <script>
 const MAPS = [
-  { id: 'mirage',  label: 'Mirage' },
-  { id: 'inferno', label: 'Inferno' },
-  { id: 'nuke',    label: 'Nuke' },
-  { id: 'ancient', label: 'Ancient' },
-  { id: 'anubis',  label: 'Anubis' },
-  { id: 'cache',   label: 'Cache' },
+  { id:'mirage', label:'Mirage' }, { id:'inferno', label:'Inferno' },
+  { id:'nuke', label:'Nuke' }, { id:'ancient', label:'Ancient' },
+  { id:'anubis', label:'Anubis' }, { id:'cache', label:'Cache' },
 ];
-
-// dust2 is banished - special treatment
 const FTM_MAPS = ['dust2'];
-
 const MAP_RADAR_IMGS = {
-  mirage:  'https://raw.githubusercontent.com/MurkyYT/cs2-map-icons/main/images/radars/de_mirage_radar_psd.png',
-  inferno: 'https://raw.githubusercontent.com/MurkyYT/cs2-map-icons/main/images/radars/de_inferno_radar_psd.png',
-  nuke:    'https://raw.githubusercontent.com/MurkyYT/cs2-map-icons/main/images/radars/de_nuke_radar_psd.png',
-  ancient: 'https://raw.githubusercontent.com/MurkyYT/cs2-map-icons/main/images/radars/de_ancient_radar_psd.png',
-  anubis:  'https://raw.githubusercontent.com/MurkyYT/cs2-map-icons/main/images/radars/de_anubis_radar_psd.png',
-  cache:   'https://raw.githubusercontent.com/MurkyYT/cs2-map-icons/main/images/radars/de_cache_radar_psd.png',
+  mirage:'https://raw.githubusercontent.com/MurkyYT/cs2-map-icons/main/images/radars/de_mirage_radar_psd.png',
+  inferno:'https://raw.githubusercontent.com/MurkyYT/cs2-map-icons/main/images/radars/de_inferno_radar_psd.png',
+  nuke:'https://raw.githubusercontent.com/MurkyYT/cs2-map-icons/main/images/radars/de_nuke_radar_psd.png',
+  ancient:'https://raw.githubusercontent.com/MurkyYT/cs2-map-icons/main/images/radars/de_ancient_radar_psd.png',
+  anubis:'https://raw.githubusercontent.com/MurkyYT/cs2-map-icons/main/images/radars/de_anubis_radar_psd.png',
+  cache:'https://raw.githubusercontent.com/MurkyYT/cs2-map-icons/main/images/radars/de_cache_radar_psd.png',
 };
-
 const SEGMENTS = ['execute','retake','instant_smokes'];
 const SEG_LABELS = { execute:'Execute', retake:'Retake', instant_smokes:'Instant smokes' };
-
 const STAGES = ['new','refresh','learnt'];
 const STAGE_LABELS = { new:'New', refresh:'Refresh', learnt:'Learnt' };
 
-// migration: drop lineups with old segments that no longer exist
 function migrateLineups(data) {
   return data.filter(l => SEGMENTS.includes(l.segment)).map(l => {
     if (!STAGES.includes(l.stage)) l.stage = 'new';
+    if (!l.mediaType) {
+      l.mediaType = 'video'; l.video = l.media || ''; l.images = []; delete l.media;
+    }
     return l;
   });
 }
 
 let lineups = migrateLineups(JSON.parse(localStorage.getItem('nadeVaultLineups') || '[]'));
-
 let selectedMap = null;
 let activeNadeTypes = new Set(['smoke','flash','molly','he']);
 let activeSegments = new Set([...SEGMENTS]);
 let activeStages = new Set([...STAGES]);
-let adminPickedX = null;
-let adminPickedY = null;
+let adminPickedX = null, adminPickedY = null;
+let currentAdminMediaType = 'video';
+let galleryImages = [], galleryIndex = 0;
+let currentModalLineupId = null;
+let editPickedX = null, editPickedY = null;
+let currentEditMediaType = 'video';
 
-function saveData() {
-  localStorage.setItem('nadeVaultLineups', JSON.stringify(lineups));
-}
+function saveData() { localStorage.setItem('nadeVaultLineups', JSON.stringify(lineups)); }
 
-function init() {
-  renderMapList();
-  renderSegmentList();
-  renderStageList();
-  selectMap('mirage');
-}
+function init() { renderMapList(); renderSegmentList(); renderStageList(); selectMap('mirage'); }
 
 function renderMapList() {
   const el = document.getElementById('mapList');
@@ -999,159 +533,83 @@ function renderMapList() {
 }
 
 function selectMap(mapId) {
-  selectedMap = mapId;
-  renderMapList();
-  showMap(mapId);
-  renderMarkers();
-  updateTopbar();
+  selectedMap = mapId; renderMapList(); showMap(mapId); renderMarkers(); updateTopbar();
 }
 
 function showMap(mapId) {
   document.getElementById('noMapMsg').style.display = 'none';
   const placeholder = document.getElementById('mapPlaceholder');
   const container = document.getElementById('mapImageContainer');
-
   placeholder.style.display = 'flex';
-
-  // Clear previous FTM state if any
   const existingFtm = container.querySelector('.ftm-state');
   if (existingFtm) existingFtm.remove();
-
   const img = document.getElementById('mapImage');
   const overlay = document.getElementById('markerOverlay');
-
   if (FTM_MAPS.includes(mapId)) {
-    img.style.display = 'none';
-    overlay.innerHTML = '';
-    if (!container.querySelector('.ftm-state')) {
-      const ftm = document.createElement('div');
-      ftm.className = 'ftm-state';
-      ftm.innerHTML = '<div class="ftm-text">Fuck that map</div><div class="ftm-sub">// no lineups here</div>';
-      container.appendChild(ftm);
-    }
-    return;
+    img.style.display = 'none'; overlay.innerHTML = '';
+    const ftm = document.createElement('div');
+    ftm.className = 'ftm-state';
+    ftm.innerHTML = '<div class="ftm-text">Fuck that map</div><div class="ftm-sub">// no lineups here</div>';
+    container.appendChild(ftm); return;
   }
-
   img.style.display = 'block';
   const url = MAP_RADAR_IMGS[mapId];
-  if (url) {
-    img.src = url;
-  } else {
-    img.style.display = 'none';
-    overlay.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:var(--text-dim);font-family:var(--font-mono);font-size:12px;letter-spacing:2px;">MAP IMG UNAVAILABLE</div>';
-  }
+  if (url) { img.src = url; }
 }
 
 function renderSegmentList() {
-  const el = document.getElementById('segmentList');
-  el.innerHTML = '';
+  const el = document.getElementById('segmentList'); el.innerHTML = '';
   SEGMENTS.forEach(seg => {
     const btn = document.createElement('button');
     btn.className = 'filter-btn' + (activeSegments.has(seg) ? ' active' : '');
     btn.innerHTML = '<span class="dot"></span>' + SEG_LABELS[seg];
-    btn.onclick = () => toggleSegment(seg);
+    btn.onclick = () => { if (activeSegments.has(seg)) { if (activeSegments.size > 1) activeSegments.delete(seg); } else { activeSegments.add(seg); } renderSegmentList(); renderMarkers(); updateTopbar(); };
     el.appendChild(btn);
   });
 }
 
-function toggleSegment(seg) {
-  if (activeSegments.has(seg)) {
-    if (activeSegments.size > 1) activeSegments.delete(seg);
-  } else {
-    activeSegments.add(seg);
-  }
-  renderSegmentList();
-  renderMarkers();
-  updateTopbar();
-}
+function toggleSegment(seg) { if (activeSegments.has(seg)) { if (activeSegments.size > 1) activeSegments.delete(seg); } else { activeSegments.add(seg); } renderSegmentList(); renderMarkers(); updateTopbar(); }
 
 function renderStageList() {
-  const el = document.getElementById('stageList');
-  el.innerHTML = '';
+  const el = document.getElementById('stageList'); el.innerHTML = '';
   STAGES.forEach(stage => {
     const btn = document.createElement('button');
-    const isActive = activeStages.has(stage);
-    btn.className = 'filter-btn stage-' + stage + (isActive ? ' active' : '');
+    btn.className = 'filter-btn stage-' + stage + (activeStages.has(stage) ? ' active' : '');
     btn.innerHTML = '<span class="dot"></span>' + STAGE_LABELS[stage];
-    btn.onclick = () => toggleStage(stage);
+    btn.onclick = () => { if (activeStages.has(stage)) { if (activeStages.size > 1) activeStages.delete(stage); } else { activeStages.add(stage); } renderStageList(); renderMarkers(); updateTopbar(); };
     el.appendChild(btn);
   });
-}
-
-function toggleStage(stage) {
-  if (activeStages.has(stage)) {
-    if (activeStages.size > 1) activeStages.delete(stage);
-  } else {
-    activeStages.add(stage);
-  }
-  renderStageList();
-  renderMarkers();
-  updateTopbar();
 }
 
 function toggleNadeFilter(type) {
-  if (activeNadeTypes.has(type)) {
-    if (activeNadeTypes.size > 1) activeNadeTypes.delete(type);
-  } else {
-    activeNadeTypes.add(type);
-  }
-  document.querySelectorAll('.nade-btn').forEach(btn => {
-    btn.classList.toggle('active', activeNadeTypes.has(btn.dataset.type));
-  });
-  renderMarkers();
-  updateTopbar();
+  if (activeNadeTypes.has(type)) { if (activeNadeTypes.size > 1) activeNadeTypes.delete(type); } else { activeNadeTypes.add(type); }
+  document.querySelectorAll('.nade-btn').forEach(btn => btn.classList.toggle('active', activeNadeTypes.has(btn.dataset.type)));
+  renderMarkers(); updateTopbar();
 }
 
 function renderMarkers() {
   const overlay = document.getElementById('markerOverlay');
-  if (!overlay) return;
-  overlay.innerHTML = '';
+  if (!overlay) return; overlay.innerHTML = '';
   if (!selectedMap || FTM_MAPS.includes(selectedMap)) return;
-
-  const visible = lineups.filter(l =>
-    l.map === selectedMap &&
-    activeNadeTypes.has(l.type) &&
-    activeSegments.has(l.segment) &&
-    activeStages.has(l.stage || 'new')
-  );
-
-  visible.forEach(l => {
+  lineups.filter(l => l.map === selectedMap && activeNadeTypes.has(l.type) && activeSegments.has(l.segment) && activeStages.has(l.stage || 'new')).forEach(l => {
     const marker = document.createElement('div');
     marker.className = 'marker ' + l.type;
-    marker.style.left = l.x + '%';
-    marker.style.top = l.y + '%';
-    marker.innerHTML = '<div class="marker-inner">' + getNadeIcon(l.type) + '</div>';
+    marker.style.left = l.x + '%'; marker.style.top = l.y + '%';
+    marker.innerHTML = '<div class="marker-inner"><img src="images/' + getNadeImg(l.type) + '" width="14" height="14" style="object-fit:contain;filter:brightness(1.3)"></div>';
     marker.title = l.name;
     marker.onclick = () => openLineupModal(l);
     overlay.appendChild(marker);
   });
 }
 
-function getNadeIcon(type) {
-  const icons = {
-    smoke: '<img src="images/Smoke2.png" width="14" height="14" style="object-fit:contain;filter:brightness(1.2)">',
-    flash: '<img src="images/Flashbang.png" width="14" height="14" style="object-fit:contain;filter:brightness(1.2)">',
-    molly: '<img src="images/Molotov.png" width="14" height="14" style="object-fit:contain;filter:brightness(1.2)">',
-    he:    '<img src="images/HEgrenade.png" width="14" height="14" style="object-fit:contain;filter:brightness(1.2)">',
-  };
-  return icons[type] || '';
-}
+function getNadeImg(type) { return { smoke:'Smoke2.png', flash:'Flashbang.png', molly:'Molotov.png', he:'HEgrenade.png' }[type] || 'Smoke2.png'; }
 
 function updateTopbar() {
   const mapLabel = selectedMap ? (MAPS.find(m => m.id === selectedMap)?.label || selectedMap) : '-';
   document.getElementById('topbarMap').textContent = mapLabel;
-
-  const count = selectedMap && !FTM_MAPS.includes(selectedMap) ? lineups.filter(l =>
-    l.map === selectedMap &&
-    activeNadeTypes.has(l.type) &&
-    activeSegments.has(l.segment) &&
-    activeStages.has(l.stage || 'new')
-  ).length : 0;
+  const count = selectedMap && !FTM_MAPS.includes(selectedMap) ? lineups.filter(l => l.map === selectedMap && activeNadeTypes.has(l.type) && activeSegments.has(l.segment) && activeStages.has(l.stage || 'new')).length : 0;
   document.getElementById('topbarCount').textContent = count;
-
-  const allTypes = activeNadeTypes.size === 4;
-  const allSegs = activeSegments.size === SEGMENTS.length;
-  const allStages = activeStages.size === STAGES.length;
+  const allTypes = activeNadeTypes.size === 4, allSegs = activeSegments.size === SEGMENTS.length, allStages = activeStages.size === STAGES.length;
   let filterLabel = 'ALL';
   if (!allTypes || !allSegs || !allStages) {
     const parts = [];
@@ -1163,85 +621,252 @@ function updateTopbar() {
   document.getElementById('topbarFilter').textContent = filterLabel;
 }
 
+// ---- MODAL ----
+
 function openLineupModal(lineup) {
+  currentModalLineupId = lineup.id;
+  document.getElementById('modalInner').classList.remove('editing');
+  document.getElementById('editToggleBtn').textContent = 'EDIT';
+  populateModalView(lineup);
+  document.getElementById('lineupModal').classList.add('open');
+}
+
+function populateModalView(lineup) {
   document.getElementById('modalTitle').textContent = lineup.name;
   document.getElementById('modalTypeBadge').textContent = lineup.type.toUpperCase();
   document.getElementById('modalTypeBadge').className = 'badge ' + lineup.type;
   document.getElementById('modalSegBadge').textContent = SEG_LABELS[lineup.segment] || lineup.segment;
   document.getElementById('modalMapBadge').textContent = MAPS.find(m => m.id === lineup.map)?.label || lineup.map;
-  const stage = lineup.stage || 'new';
-  document.getElementById('modalStageBadge').textContent = STAGE_LABELS[stage];
-  document.getElementById('modalStageBadge').className = 'badge stage-' + stage;
+  updateStageSwitcher(lineup.stage || 'new');
 
   const mediaEl = document.getElementById('modalMedia');
-  if (lineup.media) {
-    const ytMatch = lineup.media.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  const galleryNav = document.getElementById('galleryNav');
+
+  if (lineup.mediaType === 'images' && lineup.images && lineup.images.length > 0) {
+    galleryImages = lineup.images.filter(u => u.trim());
+    galleryIndex = 0;
+    renderGalleryImage();
+    galleryNav.style.display = galleryImages.length > 1 ? 'block' : 'none';
+    renderGalleryDots();
+  } else if (lineup.video) {
+    galleryNav.style.display = 'none';
+    const ytMatch = lineup.video.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
     if (ytMatch) {
       mediaEl.innerHTML = '<iframe src="https://www.youtube.com/embed/' + ytMatch[1] + '?autoplay=1&mute=1" frameborder="0" allowfullscreen allow="autoplay"></iframe>';
-    } else if (lineup.media.match(/\.(mp4|webm)$/i)) {
-      mediaEl.innerHTML = '<video src="' + lineup.media + '" controls autoplay muted loop></video>';
+    } else if (lineup.video.match(/\.(mp4|webm)$/i)) {
+      mediaEl.innerHTML = '<video src="' + lineup.video + '" controls autoplay muted loop></video>';
     } else {
-      mediaEl.innerHTML = '<img src="' + lineup.media + '" alt="lineup screenshot" style="object-fit:contain">';
+      mediaEl.innerHTML = '<img src="' + lineup.video + '" alt="media" style="object-fit:contain">';
     }
   } else {
+    galleryNav.style.display = 'none';
     mediaEl.innerHTML = '<div class="no-media">NO MEDIA ATTACHED</div>';
   }
 
   const notesEl = document.getElementById('modalNotes');
-  if (lineup.notes) {
-    notesEl.textContent = lineup.notes;
-    notesEl.style.display = 'block';
-  } else {
-    notesEl.style.display = 'none';
-  }
+  if (lineup.notes) { notesEl.textContent = lineup.notes; notesEl.style.display = 'block'; }
+  else { notesEl.style.display = 'none'; }
+}
 
-  document.getElementById('lineupModal').classList.add('open');
+function renderGalleryImage() {
+  document.getElementById('modalMedia').innerHTML = '<img src="' + galleryImages[galleryIndex] + '" alt="step ' + (galleryIndex+1) + '" style="object-fit:contain">';
+  document.getElementById('galleryCounter').textContent = (galleryIndex+1) + ' / ' + galleryImages.length;
+  document.getElementById('galleryPrev').disabled = galleryIndex === 0;
+  document.getElementById('galleryNext').disabled = galleryIndex === galleryImages.length - 1;
+  renderGalleryDots();
+}
+
+function renderGalleryDots() {
+  const el = document.getElementById('galleryDots');
+  if (galleryImages.length <= 1) { el.innerHTML = ''; return; }
+  el.innerHTML = galleryImages.map((_, i) => '<button class="gallery-dot' + (i === galleryIndex ? ' active' : '') + '" onclick="galleryGoTo(' + i + ')"></button>').join('');
+}
+
+function galleryMove(dir) { galleryIndex = Math.max(0, Math.min(galleryImages.length - 1, galleryIndex + dir)); renderGalleryImage(); }
+function galleryGoTo(i) { galleryIndex = i; renderGalleryImage(); }
+
+function updateStageSwitcher(stage) {
+  ['new','refresh','learnt'].forEach(s => {
+    const btn = document.getElementById('stageBtn' + s.charAt(0).toUpperCase() + s.slice(1));
+    btn.className = 'stage-switch-btn' + (s === stage ? ' active-' + s : '');
+  });
+}
+
+function setLineupStage(stage) {
+  if (!currentModalLineupId) return;
+  const lineup = lineups.find(l => l.id === currentModalLineupId);
+  if (!lineup) return;
+  lineup.stage = stage; saveData();
+  updateStageSwitcher(stage);
+  // also update edit form if open
+  const editStage = document.getElementById('editStage');
+  if (editStage) editStage.value = stage;
+  renderStageList(); renderMarkers(); updateTopbar();
 }
 
 function closeModal() {
   document.getElementById('lineupModal').classList.remove('open');
   document.getElementById('modalMedia').innerHTML = '';
+  document.getElementById('galleryNav').style.display = 'none';
+  document.getElementById('modalInner').classList.remove('editing');
+  currentModalLineupId = null; galleryImages = [];
 }
 
-function closeModalOutside(e) {
-  if (e.target === document.getElementById('lineupModal')) closeModal();
+function closeModalOutside(e) { if (e.target === document.getElementById('lineupModal')) closeModal(); }
+
+// ---- EDIT MODE ----
+
+function toggleEditMode() {
+  const modal = document.getElementById('modalInner');
+  const isEditing = modal.classList.contains('editing');
+  if (isEditing) { cancelEdit(); return; }
+  const lineup = lineups.find(l => l.id === currentModalLineupId);
+  if (!lineup) return;
+  populateEditForm(lineup);
+  modal.classList.add('editing');
+  document.getElementById('editToggleBtn').textContent = 'VIEW';
 }
 
-function openAdmin() {
-  document.getElementById('adminPanel').classList.add('open');
-  switchTab('add');
+function populateEditForm(lineup) {
+  document.getElementById('editMap').value = lineup.map;
+  document.getElementById('editType').value = lineup.type;
+  document.getElementById('editName').value = lineup.name;
+  document.getElementById('editSeg').value = lineup.segment;
+  document.getElementById('editStage').value = lineup.stage || 'new';
+  document.getElementById('editNotes').value = lineup.notes || '';
+
+  // media
+  const mediaType = lineup.mediaType || 'video';
+  currentEditMediaType = mediaType;
+  switchEditMediaType(mediaType);
+  if (mediaType === 'video') {
+    document.getElementById('editVideo').value = lineup.video || '';
+  } else {
+    const list = document.getElementById('editImageUrlList');
+    list.innerHTML = '';
+    const imgs = lineup.images && lineup.images.length ? lineup.images : [''];
+    imgs.forEach((url, i) => {
+      const row = document.createElement('div');
+      row.className = 'image-url-row';
+      row.innerHTML = '<input class="form-input" type="text" value="' + (url||'') + '" placeholder="https://... image URL #' + (i+1) + '" /><button class="btn-remove-img" onclick="removeImageRow(this,\'editImageUrlList\')">&#10005;</button>';
+      list.appendChild(row);
+    });
+  }
+
+  // map picker
+  editPickedX = lineup.x; editPickedY = lineup.y;
+  const wrap = document.getElementById('editMapPickerWrap');
+  const imgUrl = MAP_RADAR_IMGS[lineup.map];
+  if (imgUrl) {
+    wrap.innerHTML = '<div class="coord-picker-area" id="editCoordPicker" onclick="editPickCoords(event)"><img src="' + imgUrl + '" alt="map" draggable="false"><div class="coord-crosshair" id="editCoordCrosshair" style="display:block;left:' + lineup.x + '%;top:' + lineup.y + '%"></div></div>';
+  }
+  document.getElementById('editCoordX').textContent = lineup.x + '%';
+  document.getElementById('editCoordY').textContent = lineup.y + '%';
 }
 
-function closeAdmin() {
-  document.getElementById('adminPanel').classList.remove('open');
+function switchEditMediaType(type) {
+  currentEditMediaType = type;
+  document.getElementById('editMediaTypeVideo').classList.toggle('active', type === 'video');
+  document.getElementById('editMediaTypeImages').classList.toggle('active', type === 'images');
+  document.getElementById('editVideoField').style.display = type === 'video' ? 'flex' : 'none';
+  document.getElementById('editImagesField').style.display = type === 'images' ? 'flex' : 'none';
 }
 
-function closeAdminOutside(e) {
-  if (e.target === document.getElementById('adminPanel')) closeAdmin();
+function addEditImageRow() {
+  const list = document.getElementById('editImageUrlList');
+  if (list.children.length >= 10) return;
+  const row = document.createElement('div');
+  row.className = 'image-url-row';
+  row.innerHTML = '<input class="form-input" type="text" placeholder="https://... image URL #' + (list.children.length+1) + '" /><button class="btn-remove-img" onclick="removeImageRow(this,\'editImageUrlList\')">&#10005;</button>';
+  list.appendChild(row);
 }
 
-function switchTab(tab) {
-  document.querySelectorAll('.admin-tab').forEach((t, i) => {
-    t.classList.toggle('active', ['add','manage','export'][i] === tab);
-  });
-  document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
-  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
-  document.getElementById('adminFooter').style.display = tab === 'add' ? 'flex' : 'none';
-  if (tab === 'manage') renderManageList();
-  if (tab === 'export') renderExport();
+function editPickCoords(e) {
+  const picker = document.getElementById('editCoordPicker');
+  const rect = picker.getBoundingClientRect();
+  const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+  const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+  editPickedX = parseFloat(x); editPickedY = parseFloat(y);
+  document.getElementById('editCoordX').textContent = x + '%';
+  document.getElementById('editCoordY').textContent = y + '%';
+  const ch = document.getElementById('editCoordCrosshair');
+  if (ch) { ch.style.display = 'block'; ch.style.left = x + '%'; ch.style.top = y + '%'; }
 }
+
+function saveEdit() {
+  const lineup = lineups.find(l => l.id === currentModalLineupId);
+  if (!lineup) return;
+  lineup.map = document.getElementById('editMap').value;
+  lineup.type = document.getElementById('editType').value;
+  lineup.name = document.getElementById('editName').value.trim();
+  lineup.segment = document.getElementById('editSeg').value;
+  lineup.stage = document.getElementById('editStage').value;
+  lineup.notes = document.getElementById('editNotes').value.trim();
+  lineup.mediaType = currentEditMediaType;
+  if (currentEditMediaType === 'video') {
+    lineup.video = document.getElementById('editVideo').value.trim();
+    lineup.images = [];
+  } else {
+    lineup.images = [...document.getElementById('editImageUrlList').querySelectorAll('input')].map(i => i.value.trim()).filter(v => v);
+    lineup.video = '';
+  }
+  if (editPickedX !== null) { lineup.x = editPickedX; lineup.y = editPickedY; }
+  saveData();
+  renderMapList(); renderMarkers(); updateTopbar();
+  // switch back to view and refresh
+  document.getElementById('modalInner').classList.remove('editing');
+  document.getElementById('editToggleBtn').textContent = 'EDIT';
+  populateModalView(lineup);
+}
+
+function cancelEdit() {
+  document.getElementById('modalInner').classList.remove('editing');
+  document.getElementById('editToggleBtn').textContent = 'EDIT';
+}
+
+function deleteCurrentLineup() {
+  if (!currentModalLineupId) return;
+  if (!confirm('Delete this lineup?')) return;
+  lineups = lineups.filter(l => l.id !== currentModalLineupId);
+  saveData(); renderMapList(); renderMarkers(); updateTopbar(); closeModal();
+}
+
+// ---- ADD LINEUP PANEL ----
+
+function switchAdminMediaType(type) {
+  currentAdminMediaType = type;
+  document.getElementById('adminMediaTypeVideo').classList.toggle('active', type === 'video');
+  document.getElementById('adminMediaTypeImages').classList.toggle('active', type === 'images');
+  document.getElementById('adminVideoField').style.display = type === 'video' ? 'flex' : 'none';
+  document.getElementById('adminImagesField').style.display = type === 'images' ? 'flex' : 'none';
+}
+
+function addImageRow(listId) {
+  const list = document.getElementById(listId);
+  if (list.children.length >= 10) return;
+  const row = document.createElement('div');
+  row.className = 'image-url-row';
+  row.innerHTML = '<input class="form-input" type="text" placeholder="https://... image URL #' + (list.children.length+1) + '" /><button class="btn-remove-img" onclick="removeImageRow(this,\'' + listId + '\')">&#10005;</button>';
+  list.appendChild(row);
+}
+
+function removeImageRow(btn, listId) {
+  const list = document.getElementById(listId);
+  if (list.children.length <= 1) { btn.parentElement.querySelector('input').value = ''; return; }
+  btn.parentElement.remove();
+}
+
+function openAdmin() { document.getElementById('adminPanel').classList.add('open'); }
+function closeAdmin() { document.getElementById('adminPanel').classList.remove('open'); }
+function closeAdminOutside(e) { if (e.target === document.getElementById('adminPanel')) closeAdmin(); }
 
 function updateAdminMapPreview() {
   const mapId = document.getElementById('adminMap').value;
   const wrap = document.getElementById('adminMapPickerWrap');
-  if (!mapId || FTM_MAPS.includes(mapId)) {
-    wrap.innerHTML = '<div class="map-select-hint">Select a map first</div>';
-    return;
-  }
+  if (!mapId) { wrap.innerHTML = '<div class="map-select-hint">Select a map first</div>'; return; }
   const imgUrl = MAP_RADAR_IMGS[mapId];
   wrap.innerHTML = '<div class="coord-picker-area" id="coordPicker" onclick="pickCoords(event)"><img src="' + imgUrl + '" alt="map" draggable="false"><div class="coord-crosshair" id="coordCrosshair"></div></div>';
-  adminPickedX = null;
-  adminPickedY = null;
+  adminPickedX = null; adminPickedY = null;
   document.getElementById('coordX').textContent = '-';
   document.getElementById('coordY').textContent = '-';
 }
@@ -1251,8 +876,7 @@ function pickCoords(e) {
   const rect = picker.getBoundingClientRect();
   const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
   const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
-  adminPickedX = parseFloat(x);
-  adminPickedY = parseFloat(y);
+  adminPickedX = parseFloat(x); adminPickedY = parseFloat(y);
   document.getElementById('coordX').textContent = x + '%';
   document.getElementById('coordY').textContent = y + '%';
   const ch = document.getElementById('coordCrosshair');
@@ -1265,63 +889,35 @@ function saveLineup() {
   const name = document.getElementById('adminName').value.trim();
   const seg = document.getElementById('adminSeg').value;
   const stage = document.getElementById('adminStage').value;
-  const media = document.getElementById('adminMedia').value.trim();
   const notes = document.getElementById('adminNotes').value.trim();
-
   if (!mapId) { alert('Select a map.'); return; }
   if (!name) { alert('Enter a lineup name.'); return; }
   if (adminPickedX === null) { alert('Click on the map to set the marker position.'); return; }
-
-  lineups.push({ id: 'l' + Date.now(), map: mapId, type, name, segment: seg, stage, x: adminPickedX, y: adminPickedY, media, notes });
+  let mediaType = currentAdminMediaType, video = '', images = [];
+  if (mediaType === 'video') {
+    video = document.getElementById('adminVideo').value.trim();
+  } else {
+    images = [...document.getElementById('adminImageUrlList').querySelectorAll('input')].map(i => i.value.trim()).filter(v => v);
+    if (!images.length) { alert('Add at least one image URL, or switch to Video.'); return; }
+  }
+  lineups.push({ id:'l'+Date.now(), map:mapId, type, name, segment:seg, stage, mediaType, video, images, x:adminPickedX, y:adminPickedY, notes });
   saveData();
-
   document.getElementById('adminMap').value = '';
   document.getElementById('adminName').value = '';
-  document.getElementById('adminMedia').value = '';
+  document.getElementById('adminVideo').value = '';
   document.getElementById('adminNotes').value = '';
-  adminPickedX = null;
-  adminPickedY = null;
+  document.getElementById('adminImageUrlList').innerHTML = '<div class="image-url-row"><input class="form-input" type="text" placeholder="https://... image URL #1" /><button class="btn-remove-img" onclick="removeImageRow(this,\'adminImageUrlList\')">&#10005;</button></div>';
+  adminPickedX = null; adminPickedY = null;
   updateAdminMapPreview();
-
-  renderMapList();
-  if (selectedMap === mapId) renderMarkers();
-  updateTopbar();
-  closeAdmin();
-}
-
-function renderManageList() {
-  const mapFilter = document.getElementById('manageMapFilter').value;
-  const container = document.getElementById('manageLineupList');
-  const filtered = mapFilter ? lineups.filter(l => l.map === mapFilter) : lineups;
-
-  if (!filtered.length) {
-    container.innerHTML = '<div style="color:var(--text-dim);font-size:13px;font-family:var(--font-mono);padding:12px 0;">No lineups found.</div>';
-    return;
-  }
-
-  container.innerHTML = filtered.map(l => {
-    const stage = l.stage || 'new';
-    return '<div class="lineup-item"><div class="lineup-item-info"><span class="lineup-item-name">' + l.name + '</span><span class="lineup-item-meta">' + (MAPS.find(m=>m.id===l.map)?.label||l.map) + ' / ' + l.type + ' / ' + (SEG_LABELS[l.segment]||l.segment) + ' / ' + STAGE_LABELS[stage] + '</span></div><button class="btn-delete" onclick="deleteLineup(\'' + l.id + '\')">DELETE</button></div>';
-  }).join('');
-}
-
-function deleteLineup(id) {
-  lineups = lineups.filter(l => l.id !== id);
-  saveData();
-  renderManageList();
-  renderMapList();
-  renderMarkers();
-  updateTopbar();
+  renderMapList(); if (selectedMap === mapId) renderMarkers(); updateTopbar(); closeAdmin();
 }
 
 function renderExport() {
   document.getElementById('exportBox').textContent = JSON.stringify(lineups, null, 2);
 }
-
 function copyExport() {
   navigator.clipboard.writeText(JSON.stringify(lineups, null, 2)).then(() => {
-    const btn = event.target;
-    btn.textContent = 'COPIED!';
+    const btn = event.target; btn.textContent = 'COPIED!';
     setTimeout(() => btn.textContent = 'COPY JSON', 1500);
   });
 }
