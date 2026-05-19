@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -847,7 +847,7 @@
 
         <div class="form-group">
           <label class="form-label">NAME</label>
-          <input class="form-input" id="adminName" type="text" placeholder="např. A-site default smoke" />
+          <input class="form-input" id="adminName" type="text" placeholder="e.g. A-site default smoke" />
         </div>
 
         <div class="form-group">
@@ -863,19 +863,19 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">MEDIA (YouTube URL nebo obrázek URL)</label>
-          <input class="form-input" id="adminMedia" type="text" placeholder="https://youtube.com/watch?v=... nebo URL screenshotu" />
+          <label class="form-label">MEDIA (YouTube URL or image URL)</label>
+          <input class="form-input" id="adminMedia" type="text" placeholder="https://youtube.com/watch?v=... or screenshot URL" />
         </div>
 
         <div class="form-group">
-          <label class="form-label">NOTES (volitelné)</label>
-          <textarea class="form-textarea" id="adminNotes" placeholder="Popis, timing, kde stát..."></textarea>
+          <label class="form-label">NOTES (optional)</label>
+          <textarea class="form-textarea" id="adminNotes" placeholder="Description, timing, where to stand..."></textarea>
         </div>
 
         <div class="form-group">
-          <label class="form-label">POZICE NA MAPE - klikni na mapu</label>
+          <label class="form-label">POSITION ON MAP - click to place marker</label>
           <div id="adminMapPickerWrap">
-            <div class="map-select-hint" id="mapPickerHint">Nejdriv vyber mapu nahore</div>
+            <div class="map-select-hint" id="mapPickerHint">Select a map first</div>
           </div>
           <div class="coord-hint">X: <span id="coordX">-</span> &nbsp; Y: <span id="coordY">-</span></div>
         </div>
@@ -884,9 +884,9 @@
       <!-- MANAGE TAB -->
       <div class="admin-tab-content" id="tabManage">
         <div class="form-group">
-          <label class="form-label">FILTROVAT MAPU</label>
+          <label class="form-label">FILTER BY MAP</label>
           <select class="form-select" id="manageMapFilter" onchange="renderManageList()">
-            <option value="">Vsechny mapy</option>
+            <option value="">All maps</option>
             <option value="mirage">Mirage</option>
             <option value="inferno">Inferno</option>
             <option value="dust2">Dust2</option>
@@ -902,17 +902,17 @@
       <!-- EXPORT TAB -->
       <div class="admin-tab-content" id="tabExport">
         <p style="font-size:13px; color:var(--text-dim); line-height:1.6;">
-          Zkopiruj tento JSON a uloz jako <code style="color:var(--accent)">data/lineups.json</code> ve svem projektu. Pri kazdem pridani/odebrani lineup aktualizuj tento soubor.
+          Copy this JSON and save it as <code style="color:var(--accent)">data/lineups.json</code> in your project. Update this file every time you add or remove a lineup.
         </p>
         <div class="export-box" id="exportBox"></div>
-        <button class="btn-secondary" onclick="copyExport()">KOPIROVAT JSON</button>
+        <button class="btn-secondary" onclick="copyExport()">COPY JSON</button>
       </div>
 
     </div>
 
     <div class="admin-footer" id="adminFooter">
-      <button class="btn-secondary" onclick="closeAdmin()">ZRUSIT</button>
-      <button class="btn-primary" onclick="saveLineup()">ULOZIT LINEUP</button>
+      <button class="btn-secondary" onclick="closeAdmin()">CANCEL</button>
+      <button class="btn-primary" onclick="saveLineup()">SAVE LINEUP</button>
     </div>
   </div>
 </div>
@@ -945,12 +945,8 @@ const MAP_RADAR_IMGS = {
 const SEGMENTS = ['execute','retake','mid','pistol','eco','utility'];
 const SEG_LABELS = { execute:'Execute', retake:'Retake', mid:'Mid control', pistol:'Pistol round', eco:'Eco', utility:'General utility' };
 
-// Load from localStorage or use sample data
-let lineups = JSON.parse(localStorage.getItem('nadeVaultLineups') || 'null') || [
-  { id: 'demo1', map: 'mirage', type: 'smoke', name: 'CT default smoke', segment: 'execute', x: 52, y: 38, media: '', notes: 'Standardni smoke na CT od connector side.' },
-  { id: 'demo2', map: 'mirage', type: 'flash', name: 'Short pop flash', segment: 'execute', x: 65, y: 55, media: '', notes: 'Pop flash pres short na A.' },
-  { id: 'demo3', map: 'mirage', type: 'molly', name: 'Jungle molly', segment: 'retake', x: 44, y: 47, media: '', notes: 'Molly do jungle pri retaku A-site.' },
-];
+// Load from localStorage or start empty
+let lineups = JSON.parse(localStorage.getItem('nadeVaultLineups') || '[]');
 
 let selectedMap = null;
 let activeNadeTypes = new Set(['smoke','flash','molly','he']);
@@ -1102,8 +1098,17 @@ function updateTopbar() {
   ).length : 0;
   document.getElementById('topbarCount').textContent = count;
 
-  const types = [...activeNadeTypes].join('+').toUpperCase();
-  document.getElementById('topbarFilter').textContent = activeNadeTypes.size === 4 ? 'ALL' : types;
+  const allTypes = activeNadeTypes.size === 4;
+  const allSegs = activeSegments.size === SEGMENTS.length;
+  let filterLabel = 'ALL';
+  if (!allTypes && !allSegs) {
+    filterLabel = [...activeNadeTypes].join('+').toUpperCase() + ' / ' + [...activeSegments].map(s => SEG_LABELS[s]).join('+');
+  } else if (!allTypes) {
+    filterLabel = [...activeNadeTypes].join('+').toUpperCase();
+  } else if (!allSegs) {
+    filterLabel = [...activeSegments].map(s => SEG_LABELS[s]).join('+');
+  }
+  document.getElementById('topbarFilter').textContent = filterLabel;
 }
 
 // ============================================================
@@ -1185,7 +1190,7 @@ function updateAdminMapPreview() {
   const mapId = document.getElementById('adminMap').value;
   const wrap = document.getElementById('adminMapPickerWrap');
   if (!mapId) {
-    wrap.innerHTML = '<div class="map-select-hint" id="mapPickerHint">Nejdriv vyber mapu nahore</div>';
+    wrap.innerHTML = '<div class="map-select-hint" id="mapPickerHint">Select a map first</div>';
     return;
   }
   const imgUrl = MAP_RADAR_IMGS[mapId];
@@ -1226,9 +1231,9 @@ function saveLineup() {
   const media = document.getElementById('adminMedia').value.trim();
   const notes = document.getElementById('adminNotes').value.trim();
 
-  if (!mapId) { alert('Vyber mapu.'); return; }
-  if (!name) { alert('Zadej nazev lineup.'); return; }
-  if (adminPickedX === null) { alert('Klikni na mapu a urc pozici markeru.'); return; }
+  if (!mapId) { alert('Select a map.'); return; }
+  if (!name) { alert('Enter a lineup name.'); return; }
+  if (adminPickedX === null) { alert('Click on the map to set the marker position.'); return; }
 
   const lineup = {
     id: 'l' + Date.now(),
@@ -1267,7 +1272,7 @@ function renderManageList() {
   const filtered = mapFilter ? lineups.filter(l => l.map === mapFilter) : lineups;
 
   if (!filtered.length) {
-    container.innerHTML = '<div style="color:var(--text-dim);font-size:13px;font-family:var(--font-mono);padding:12px 0;">Zadne lineups.</div>';
+    container.innerHTML = '<div style="color:var(--text-dim);font-size:13px;font-family:var(--font-mono);padding:12px 0;">No lineups found.</div>';
     return;
   }
 
@@ -1298,8 +1303,8 @@ function renderExport() {
 function copyExport() {
   navigator.clipboard.writeText(JSON.stringify(lineups, null, 2)).then(() => {
     const btn = event.target;
-    btn.textContent = 'SKOPIROVANO!';
-    setTimeout(() => btn.textContent = 'KOPIROVAT JSON', 1500);
+    btn.textContent = 'COPIED!';
+    setTimeout(() => btn.textContent = 'COPY JSON', 1500);
   });
 }
 
