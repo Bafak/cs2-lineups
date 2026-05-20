@@ -622,14 +622,12 @@ function renderMarkers() {
   const visible = lineups.filter(l => l.map === selectedMap && activeNadeTypes.has(l.type) && activeSegments.has(l.segment) && activeStages.has(l.stage || 'new'));
 
   const container = document.getElementById('mapImageContainer');
-  let svg = container.querySelector('.lines-svg');
-  if (!svg) {
-    svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-    svg.setAttribute('class','lines-svg');
-    svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:4;overflow:visible;';
-    container.insertBefore(svg, overlay);
-  }
-  svg.innerHTML = '';
+  const oldSvg = container.querySelector('.lines-svg');
+  if (oldSvg) oldSvg.remove();
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('class','lines-svg');
+  svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:4;overflow:visible;';
+  container.insertBefore(svg, overlay);
 
   visible.forEach(l => {
     const isFocused = focusedLineupId === l.id;
@@ -637,15 +635,16 @@ function renderMarkers() {
 
     const hasLand = l.lx != null && l.ly != null;
 
-    // dotted line (throw -> land)
+    // dotted line - hidden by default, shown on hover
     if (hasLand) {
       const line = document.createElementNS('http://www.w3.org/2000/svg','line');
-      // throw = l.lx/l.ly, land = l.x/l.y (swapped from old logic)
       line.setAttribute('x1', l.lx + '%'); line.setAttribute('y1', l.ly + '%');
       line.setAttribute('x2', l.x + '%'); line.setAttribute('y2', l.y + '%');
-      line.setAttribute('stroke', isDimmed ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.35)');
+      line.setAttribute('stroke', isDimmed ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.5)');
       line.setAttribute('stroke-width', '1.5');
       line.setAttribute('stroke-dasharray', '5,4');
+      line.setAttribute('opacity', '0');
+      line.id = 'line-' + l.id;
       svg.appendChild(line);
     }
 
@@ -676,10 +675,14 @@ function renderMarkers() {
       landMarker.addEventListener('mouseenter', () => {
         const t = document.getElementById('throw-' + l.id);
         if (t) t.classList.add('visible');
+        const ln = document.getElementById('line-' + l.id);
+        if (ln) ln.setAttribute('opacity', '1');
       });
       landMarker.addEventListener('mouseleave', () => {
         const t = document.getElementById('throw-' + l.id);
         if (t) t.classList.remove('visible');
+        const ln = document.getElementById('line-' + l.id);
+        if (ln) ln.setAttribute('opacity', '0');
       });
     }
 
