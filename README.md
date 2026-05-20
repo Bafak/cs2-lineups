@@ -1,1 +1,1 @@
-# cs2-lineups
+# cs2-nade-vault
