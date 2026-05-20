@@ -56,13 +56,12 @@
   .filter-btn.stage-learnt.active .dot { background:#6a7a8e; }
 
   .nade-filters { display:flex; flex-direction:column; gap:2px; }
-  .nade-btn { background:transparent; border:none; color:var(--text-dim); padding:7px 10px; font-family:var(--font-main); font-size:14px; font-weight:600; cursor:pointer; text-align:left; border-left:2px solid transparent; transition:all 0.12s; display:flex; align-items:center; gap:10px; }
+  .nade-btn { background:transparent; border:none; color:var(--text-dim); padding:7px 10px; font-family:var(--font-main); font-size:14px; font-weight:600; cursor:pointer; text-align:left; border-left:3px solid transparent; transition:all 0.12s; display:flex; align-items:center; gap:10px; }
   .nade-btn:hover { color:var(--text); background:var(--surface2); }
-  .nade-btn.active { background:var(--surface2); border-left-width:3px; }
-  .nade-btn.active.smoke { color:var(--smoke); border-left-color:var(--smoke); background:rgba(74,158,221,0.12); }
+  .nade-btn.active.smoke { color:#a0a0a0; border-left-color:#a0a0a0; background:rgba(160,160,160,0.12); }
   .nade-btn.active.flash { color:var(--flash); border-left-color:var(--flash); background:rgba(240,224,64,0.1); }
   .nade-btn.active.molly { color:var(--molly); border-left-color:var(--molly); background:rgba(232,64,48,0.12); }
-  .nade-btn.active.he { color:var(--he); border-left-color:var(--he); background:rgba(96,192,96,0.12); }
+  .nade-btn.active.he { color:#60c060; border-left-color:#60c060; background:rgba(96,192,96,0.12); }
   .nade-icon { width:20px; height:20px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 
   .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
@@ -205,10 +204,15 @@
   .btn-add-img { background:transparent; border:1px dashed var(--border2); color:var(--text-dim); padding:6px 12px; font-family:var(--font-mono); font-size:11px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; width:100%; transition:all 0.12s; margin-top:4px; }
   .btn-add-img:hover { border-color:var(--accent); color:var(--accent); }
 
-  .bounce-toggle { background:transparent; border:1px solid var(--border2); color:var(--text-dim); padding:7px 14px; font-family:var(--font-mono); font-size:11px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; width:100%; text-align:left; transition:all 0.12s; display:flex; align-items:center; gap:8px; }
+  .bounce-toggle { background:transparent; border:1px solid var(--border2); color:var(--text-dim); padding:7px 14px; font-family:var(--font-mono); font-size:11px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; text-align:left; transition:all 0.12s; display:flex; align-items:center; gap:8px; flex:1; }
   .bounce-toggle:hover { border-color:var(--text-dim); color:var(--text); }
-  .bounce-toggle.active { color:var(--accent); border-color:var(--accent); background:rgba(232,160,32,0.08); }
+  .bounce-toggle.active { color:var(--accent); border-color:var(--accent); background:rgba(232,160,32,0.15); font-weight:700; }
   .bounce-toggle-icon { font-size:14px; }
+  .bounce-row { display:flex; gap:8px; align-items:center; }
+  .bounce-count-wrap { display:flex; align-items:center; gap:6px; border:1px solid var(--accent); padding:4px 8px; background:rgba(232,160,32,0.08); flex-shrink:0; }
+  .bounce-count-btn { background:transparent; border:none; color:var(--accent); font-size:16px; cursor:pointer; padding:0 4px; line-height:1; }
+  .bounce-count-btn:hover { color:#fff; }
+  .bounce-count-val { font-family:var(--font-mono); font-size:14px; color:var(--accent); min-width:16px; text-align:center; }
 
   /* BOUNCE MARKER on map */
   .marker-bounce { position:absolute; transform:translate(-50%,-50%) rotate(45deg); pointer-events:none; z-index:8; }
@@ -261,7 +265,10 @@
     <div class="sidebar-section">
       <div class="sidebar-label-row">
         <div class="sidebar-label">// NADE TYPE</div>
-        <button class="multi-toggle" id="multiNadeToggle" onclick="toggleMultiNade()">MULTI</button>
+        <div style="display:flex;gap:4px;">
+          <button class="multi-toggle" id="allNadeToggle" onclick="selectAllNades()">ALL</button>
+          <button class="multi-toggle" id="multiNadeToggle" onclick="toggleMultiNade()">MULTI</button>
+        </div>
       </div>
       <div class="nade-filters">
         <button class="nade-btn smoke active" data-type="smoke" onclick="toggleNadeFilter('smoke')">
@@ -384,10 +391,10 @@
             <div class="form-group">
               <label class="form-label">SEGMENT</label>
               <select class="form-select" id="editSeg">
-                <option value="execute">Execute</option>
-                <option value="retake">Retake</option>
-                <option value="instant_smokes">Instant smokes</option>
                 <option value="standard">Standard</option>
+                <option value="execute">Execute</option>
+                <option value="instant_smokes">Instant smokes</option>
+                <option value="retake">Retake</option>
               </select>
             </div>
             <div class="form-group">
@@ -479,10 +486,10 @@
         <div class="form-group">
           <label class="form-label">SEGMENT</label>
           <select class="form-select" id="adminSeg">
-            <option value="execute">Execute</option>
-            <option value="retake">Retake</option>
-            <option value="instant_smokes">Instant smokes</option>
             <option value="standard">Standard</option>
+            <option value="execute">Execute</option>
+            <option value="instant_smokes">Instant smokes</option>
+            <option value="retake">Retake</option>
           </select>
         </div>
         <div class="form-group">
@@ -520,14 +527,21 @@
         <textarea class="form-textarea" id="adminNotes" placeholder="Description, timing, where to stand..."></textarea>
       </div>
       <div class="form-group">
-        <button class="bounce-toggle" id="adminBounceToggle" onclick="toggleAdminBounce()">
-          <span class="bounce-toggle-icon">◇</span> BOUNCES OFF WALL
-        </button>
+        <div class="bounce-row">
+          <button class="bounce-toggle" id="adminBounceToggle" onclick="toggleAdminBounce()">
+            <span class="bounce-toggle-icon">◇</span> BOUNCES OFF WALL
+          </button>
+          <div class="bounce-count-wrap" id="adminBounceCountWrap" style="display:none">
+            <button class="bounce-count-btn" onclick="changeAdminBounceCount(-1)">−</button>
+            <span class="bounce-count-val" id="adminBounceCount">1</span>
+            <button class="bounce-count-btn" onclick="changeAdminBounceCount(1)">+</button>
+          </div>
+        </div>
       </div>
       <div class="form-group">
-        <label class="form-label" id="adminPickerLabel">POSITION ON MAP - 1st click = LAND, 2nd click = THROW</label>
+        <label class="form-label" id="adminPickerLabel">POSITION ON MAP - 1st = LAND, 2nd = THROW</label>
         <div id="adminMapPickerWrap"><div class="map-select-hint">Select a map first</div></div>
-        <div class="coord-hint">LAND: <span id="coordLX">-</span>,<span id="coordLY">-</span> &nbsp;|&nbsp; THROW: <span id="coordX">-</span>,<span id="coordY">-</span> &nbsp;|&nbsp; BOUNCE: <span id="coordBX">-</span>,<span id="coordBY">-</span></div>
+        <div class="coord-hint" id="adminCoordHint">LAND: <span id="coordLX">-</span>,<span id="coordLY">-</span> &nbsp;|&nbsp; THROW: <span id="coordX">-</span>,<span id="coordY">-</span></div>
       </div>
     </div>
     <div class="admin-footer">
@@ -553,8 +567,8 @@ const MAP_RADAR_IMGS = {
   anubis:'https://raw.githubusercontent.com/MurkyYT/cs2-map-icons/main/images/radars/de_anubis_radar_psd.png',
   cache:'https://raw.githubusercontent.com/MurkyYT/cs2-map-icons/main/images/radars/de_cache_radar_psd.png',
 };
-const SEGMENTS = ['execute','retake','instant_smokes','standard'];
-const SEG_LABELS = { execute:'Execute', retake:'Retake', instant_smokes:'Instant smokes', standard:'Standard' };
+const SEGMENTS = ['standard','execute','instant_smokes','retake'];
+const SEG_LABELS = { standard:'Standard', execute:'Execute', instant_smokes:'Instant smokes', retake:'Retake' };
 const STAGES = ['new','refresh','learnt'];
 const STAGE_LABELS = { new:'New', refresh:'Refresh', learnt:'Learnt' };
 
@@ -575,22 +589,36 @@ let activeSegments = new Set([...SEGMENTS]);
 let activeStages = new Set([...STAGES]);
 let adminPickedX = null, adminPickedY = null, adminPickedLX = null, adminPickedLY = null, adminPickedBX = null, adminPickedBY = null;
 let adminBounce = false;
+let adminBounceCount = 1;
+let adminBouncePoints = []; // array of {x,y} for each bounce point
 
 function toggleAdminBounce() {
   adminBounce = !adminBounce;
   const btn = document.getElementById('adminBounceToggle');
   btn.classList.toggle('active', adminBounce);
   btn.querySelector('.bounce-toggle-icon').textContent = adminBounce ? '◆' : '◇';
-  const label = document.getElementById('adminPickerLabel');
-  if (adminBounce) {
-    label.textContent = 'POSITION ON MAP - 1st = LAND, 2nd = THROW, 3rd = BOUNCE';
-  } else {
-    label.textContent = 'POSITION ON MAP - 1st click = LAND, 2nd click = THROW';
-    adminPickedBX = null; adminPickedBY = null;
-    document.getElementById('coordBX').textContent = '-';
-    document.getElementById('coordBY').textContent = '-';
-  }
+  document.getElementById('adminBounceCountWrap').style.display = adminBounce ? 'flex' : 'none';
+  adminBouncePoints = [];
+  updateAdminPickerLabel();
   updateAdminMapPreview();
+}
+
+function changeAdminBounceCount(delta) {
+  adminBounceCount = Math.max(1, Math.min(3, adminBounceCount + delta));
+  document.getElementById('adminBounceCount').textContent = adminBounceCount;
+  adminBouncePoints = [];
+  updateAdminPickerLabel();
+  updateAdminMapPreview();
+}
+
+function updateAdminPickerLabel() {
+  const label = document.getElementById('adminPickerLabel');
+  if (!adminBounce) {
+    label.textContent = 'POSITION ON MAP - 1st = LAND, 2nd = THROW';
+  } else {
+    const bounceLabels = Array.from({length: adminBounceCount}, (_, i) => (i+2) + 'nd = BOUNCE ' + (adminBounceCount > 1 ? (i+1) : ''));
+    label.textContent = 'POSITION ON MAP - 1st = LAND, ' + bounceLabels.join(', ') + ', ' + (adminBounceCount+2) + '. = THROW';
+  }
 }
 let currentAdminMediaType = 'video';
 let galleryImages = [], galleryIndex = 0;
@@ -624,7 +652,12 @@ function renderMapList() {
   const el = document.getElementById('mapList');
   el.innerHTML = '';
   MAPS.forEach(m => {
-    const count = lineups.filter(l => l.map === m.id).length;
+    const count = lineups.filter(l =>
+      l.map === m.id &&
+      activeNadeTypes.has(l.type) &&
+      activeSegments.has(l.segment) &&
+      activeStages.has(l.stage || 'new')
+    ).length;
     const btn = document.createElement('button');
     btn.className = 'map-btn' + (selectedMap === m.id ? ' active' : '');
     btn.innerHTML = m.label + '<span class="count">' + count + '</span>';
@@ -664,7 +697,7 @@ function renderSegmentList() {
     const btn = document.createElement('button');
     btn.className = 'filter-btn' + (activeSegments.has(seg) ? ' active' : '');
     btn.innerHTML = '<span class="dot"></span>' + SEG_LABELS[seg];
-    btn.onclick = () => { if (activeSegments.has(seg)) { if (activeSegments.size > 1) activeSegments.delete(seg); } else { activeSegments.add(seg); } expandedGroupKey = null; renderSegmentList(); renderMarkers(); updateTopbar(); };
+    btn.onclick = () => { if (activeSegments.has(seg)) { if (activeSegments.size > 1) activeSegments.delete(seg); } else { activeSegments.add(seg); } expandedGroupKey = null; renderSegmentList(); renderMapList(); renderMarkers(); updateTopbar(); };
     el.appendChild(btn);
   });
 }
@@ -677,7 +710,7 @@ function renderStageList() {
     const btn = document.createElement('button');
     btn.className = 'filter-btn stage-' + stage + (activeStages.has(stage) ? ' active' : '');
     btn.innerHTML = '<span class="dot"></span>' + STAGE_LABELS[stage];
-    btn.onclick = () => { if (activeStages.has(stage)) { if (activeStages.size > 1) activeStages.delete(stage); } else { activeStages.add(stage); } expandedGroupKey = null; renderStageList(); renderMarkers(); updateTopbar(); };
+    btn.onclick = () => { if (activeStages.has(stage)) { if (activeStages.size > 1) activeStages.delete(stage); } else { activeStages.add(stage); } expandedGroupKey = null; renderStageList(); renderMapList(); renderMarkers(); updateTopbar(); };
     el.appendChild(btn);
   });
 }
@@ -692,7 +725,16 @@ function toggleNadeFilter(type) {
   }
   expandedGroupKey = null;
   document.querySelectorAll('.nade-btn').forEach(btn => btn.classList.toggle('active', activeNadeTypes.has(btn.dataset.type)));
-  renderMarkers(); updateTopbar();
+  renderMapList(); renderMarkers(); updateTopbar();
+}
+
+function selectAllNades() {
+  multiNadeMode = true;
+  document.getElementById('multiNadeToggle').classList.add('active');
+  activeNadeTypes = new Set(['smoke','flash','molly','he']);
+  document.querySelectorAll('.nade-btn').forEach(btn => btn.classList.add('active'));
+  expandedGroupKey = null;
+  renderMapList(); renderMarkers(); updateTopbar();
 }
 
 function toggleMultiNade() {
@@ -705,7 +747,7 @@ function toggleMultiNade() {
     document.querySelectorAll('.nade-btn').forEach(btn => btn.classList.toggle('active', activeNadeTypes.has(btn.dataset.type)));
   }
   expandedGroupKey = null;
-  renderMarkers(); updateTopbar();
+  renderMapList(); renderMarkers(); updateTopbar();
 }
 
 let focusedLineupId = null;
@@ -785,32 +827,30 @@ function renderMarkers() {
       group.lineups.forEach(l => {
         if (l.lx == null) return;
 
-        const hasBounce = l.bx != null && l.by != null;
+        const bounces = l.bounces && l.bounces.length ? l.bounces : (l.bx != null ? [{x:l.bx, y:l.by}] : []);
+        const hasBounce = bounces.length > 0;
 
-        // line(s)
         if (hasBounce) {
-          const line1 = document.createElementNS('http://www.w3.org/2000/svg','line');
-          line1.setAttribute('x1', l.x + '%'); line1.setAttribute('y1', l.y + '%');
-          line1.setAttribute('x2', l.bx + '%'); line1.setAttribute('y2', l.by + '%');
-          line1.setAttribute('stroke', 'rgba(255,255,255,0.5)');
-          line1.setAttribute('stroke-width', '1.5');
-          line1.setAttribute('stroke-dasharray', '5,4');
-          svg.appendChild(line1);
-          const line2 = document.createElementNS('http://www.w3.org/2000/svg','line');
-          line2.setAttribute('x1', l.bx + '%'); line2.setAttribute('y1', l.by + '%');
-          line2.setAttribute('x2', group.lx + '%'); line2.setAttribute('y2', group.ly + '%');
-          line2.setAttribute('stroke', 'rgba(255,255,255,0.5)');
-          line2.setAttribute('stroke-width', '1.5');
-          line2.setAttribute('stroke-dasharray', '5,4');
-          svg.appendChild(line2);
-
-          // bounce diamond marker
-          const bounceEl = document.createElement('div');
-          bounceEl.className = 'marker-bounce';
-          bounceEl.style.left = l.bx + '%';
-          bounceEl.style.top = l.by + '%';
-          bounceEl.innerHTML = '<div class="marker-bounce-inner"></div>';
-          overlay.appendChild(bounceEl);
+          // throw → bounce(s) → land
+          const pts = [[l.x, l.y], ...bounces.map(b => [b.x, b.y]), [group.lx, group.ly]];
+          for (let i = 0; i < pts.length - 1; i++) {
+            const seg = document.createElementNS('http://www.w3.org/2000/svg','line');
+            seg.setAttribute('x1', pts[i][0] + '%'); seg.setAttribute('y1', pts[i][1] + '%');
+            seg.setAttribute('x2', pts[i+1][0] + '%'); seg.setAttribute('y2', pts[i+1][1] + '%');
+            seg.setAttribute('stroke', 'rgba(255,255,255,0.5)');
+            seg.setAttribute('stroke-width', '1.5');
+            seg.setAttribute('stroke-dasharray', '5,4');
+            svg.appendChild(seg);
+          }
+          // bounce diamond markers
+          bounces.forEach(b => {
+            const bounceEl = document.createElement('div');
+            bounceEl.className = 'marker-bounce';
+            bounceEl.style.left = b.x + '%';
+            bounceEl.style.top = b.y + '%';
+            bounceEl.innerHTML = '<div class="marker-bounce-inner"></div>';
+            overlay.appendChild(bounceEl);
+          });
         } else {
           const line = document.createElementNS('http://www.w3.org/2000/svg','line');
           line.setAttribute('x1', l.x + '%'); line.setAttribute('y1', l.y + '%');
@@ -1238,19 +1278,14 @@ function updateAdminMapPreview() {
   if (!mapId) { wrap.innerHTML = '<div class="map-select-hint">Select a map first</div>'; return; }
   const imgUrl = MAP_RADAR_IMGS[mapId];
   wrap.innerHTML = '<div class="coord-picker-area" id="coordPicker" onclick="pickCoords(event)"><img src="' + imgUrl + '" alt="map" draggable="false"><div class="coord-crosshair" id="coordCrosshair"></div></div>';
-  adminPickedX = null; adminPickedY = null; adminPickedLX = null; adminPickedLY = null; adminPickedBX = null; adminPickedBY = null;
+  adminPickedX = null; adminPickedY = null; adminPickedLX = null; adminPickedLY = null;
+  adminBouncePoints = [];
   adminClickState = 'land';
-  adminBounce = false;
-  document.getElementById('adminBounceToggle').classList.remove('active');
-  document.getElementById('adminBounceToggle').querySelector('.bounce-toggle-icon').textContent = '◇';
-  if (document.getElementById('adminPickerLabel')) document.getElementById('adminPickerLabel').textContent = 'POSITION ON MAP - 1st click = LAND, 2nd click = THROW';
-  document.getElementById('coordX').textContent = '-';
-  document.getElementById('coordY').textContent = '-';
-  document.getElementById('coordLX').textContent = '-';
-  document.getElementById('coordLY').textContent = '-';
+  updateAdminCoordHint();
+  updateAdminPickerLabel();
 }
 
-let adminClickState = 'land'; // first click = land
+let adminClickState = 'land';
 
 function pickCoords(e) {
   const picker = document.getElementById('coordPicker');
@@ -1260,42 +1295,44 @@ function pickCoords(e) {
 
   if (adminClickState === 'land') {
     adminPickedLX = x; adminPickedLY = y;
-    document.getElementById('coordLX').textContent = x + '%';
-    document.getElementById('coordLY').textContent = y + '%';
-    let lch = document.getElementById('coordLandCrosshair');
-    if (!lch) {
-      lch = document.createElement('div');
-      lch.id = 'coordLandCrosshair';
-      lch.style.cssText = 'position:absolute;transform:translate(-50%,-50%);width:16px;height:16px;border:2px solid var(--accent);border-radius:50%;pointer-events:none;background:rgba(232,160,32,0.2);';
-      document.getElementById('coordPicker').appendChild(lch);
-    }
-    lch.style.left = x + '%'; lch.style.top = y + '%';
-    adminClickState = 'throw';
+    placeCrosshair('coordLandCrosshair', x, y, '16px', 'var(--accent)', 'rgba(232,160,32,0.2)', false);
+    adminClickState = adminBounce ? 'bounce0' : 'throw';
+
+  } else if (adminClickState.startsWith('bounce')) {
+    const idx = parseInt(adminClickState.replace('bounce',''));
+    adminBouncePoints[idx] = {x, y};
+    placeCrosshair('coordBounceCrosshair' + idx, x, y, '12px', 'rgba(255,255,255,0.8)', 'rgba(255,255,255,0.2)', true);
+    const nextIdx = idx + 1;
+    adminClickState = nextIdx < adminBounceCount ? 'bounce' + nextIdx : 'throw';
 
   } else if (adminClickState === 'throw') {
     adminPickedX = x; adminPickedY = y;
-    document.getElementById('coordX').textContent = x + '%';
-    document.getElementById('coordY').textContent = y + '%';
-    let ch = document.getElementById('coordCrosshair');
+    const ch = document.getElementById('coordCrosshair');
     if (ch) { ch.style.display = 'block'; ch.style.left = x + '%'; ch.style.top = y + '%'; }
-    drawPickerLine();
-    adminClickState = adminBounce ? 'bounce' : 'land';
-
-  } else if (adminClickState === 'bounce') {
-    adminPickedBX = x; adminPickedBY = y;
-    document.getElementById('coordBX').textContent = x + '%';
-    document.getElementById('coordBY').textContent = y + '%';
-    let bch = document.getElementById('coordBounceCrosshair');
-    if (!bch) {
-      bch = document.createElement('div');
-      bch.id = 'coordBounceCrosshair';
-      bch.style.cssText = 'position:absolute;transform:translate(-50%,-50%) rotate(45deg);width:12px;height:12px;border:2px solid rgba(255,255,255,0.8);pointer-events:none;background:rgba(255,255,255,0.2);';
-      document.getElementById('coordPicker').appendChild(bch);
-    }
-    bch.style.left = x + '%'; bch.style.top = y + '%';
     drawPickerLine();
     adminClickState = 'land';
   }
+
+  updateAdminCoordHint();
+}
+
+function placeCrosshair(id, x, y, size, borderColor, bg, rotate) {
+  let el = document.getElementById(id);
+  if (!el) {
+    el = document.createElement('div');
+    el.id = id;
+    const rot = rotate ? ' rotate(45deg)' : '';
+    el.style.cssText = 'position:absolute;transform:translate(-50%,-50%)' + rot + ';width:' + size + ';height:' + size + ';border:2px solid ' + borderColor + ';border-radius:' + (rotate ? '0' : '50%') + ';pointer-events:none;background:' + bg + ';';
+    document.getElementById('coordPicker').appendChild(el);
+  }
+  el.style.left = x + '%'; el.style.top = y + '%';
+}
+
+function updateAdminCoordHint() {
+  const parts = ['LAND: ' + (adminPickedLX != null ? adminPickedLX + '%,' + adminPickedLY + '%' : '-')];
+  adminBouncePoints.forEach((b, i) => parts.push('BOUNCE' + (adminBounceCount > 1 ? (i+1) : '') + ': ' + b.x + '%,' + b.y + '%'));
+  parts.push('THROW: ' + (adminPickedX != null ? adminPickedX + '%,' + adminPickedY + '%' : '-'));
+  document.getElementById('adminCoordHint').textContent = parts.join('  |  ');
 }
 
 function drawPickerLine() {
@@ -1307,12 +1344,11 @@ function drawPickerLine() {
     svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;';
     document.getElementById('coordPicker').appendChild(svg);
   }
-  if (adminPickedBX != null) {
-    // throw → bounce → land
-    svg.innerHTML = '<polyline points="' + adminPickedX + '% ' + adminPickedY + '%, ' + adminPickedBX + '% ' + adminPickedBY + '%, ' + adminPickedLX + '% ' + adminPickedLY + '%" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-dasharray="5,4"/>';
-  } else {
-    svg.innerHTML = '<line x1="' + adminPickedX + '%" y1="' + adminPickedY + '%" x2="' + adminPickedLX + '%" y2="' + adminPickedLY + '%" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-dasharray="5,4"/>';
-  }
+  // build point string: throw → bounces → land
+  const pts = [adminPickedX + '% ' + adminPickedY + '%'];
+  adminBouncePoints.forEach(b => pts.push(b.x + '% ' + b.y + '%'));
+  pts.push(adminPickedLX + '% ' + adminPickedLY + '%');
+  svg.innerHTML = '<polyline points="' + pts.join(', ') + '" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-dasharray="5,4"/>';
 }
 
 function saveLineup() {
@@ -1342,7 +1378,7 @@ function saveLineup() {
     if (join) { finalLx = existing.lx; finalLy = existing.ly; }
   }
 
-  lineups.push({ id:'l'+Date.now(), map:mapId, type, name, segment:seg, stage, mediaType, video, images, x:adminPickedX, y:adminPickedY, lx:finalLx, ly:finalLy, bx:adminPickedBX, by:adminPickedBY, notes });
+  lineups.push({ id:'l'+Date.now(), map:mapId, type, name, segment:seg, stage, mediaType, video, images, x:adminPickedX, y:adminPickedY, lx:finalLx, ly:finalLy, bounces:adminBounce ? [...adminBouncePoints] : [], notes });
   saveData();
   document.getElementById('adminMap').value = '';
   document.getElementById('adminName').value = '';
@@ -1350,7 +1386,13 @@ function saveLineup() {
   document.getElementById('adminNotes').value = '';
   document.getElementById('adminImageUrlList').innerHTML = '<div class="image-url-row"><input class="form-input" type="text" placeholder="https://... image URL #1" /><button class="btn-remove-img" onclick="removeImageRow(this,\'adminImageUrlList\')">&#10005;</button></div>';
   adminPickedX = null; adminPickedY = null; adminPickedLX = null; adminPickedLY = null;
-  adminClickState = 'throw';
+  adminBouncePoints = []; adminBounce = false; adminBounceCount = 1;
+  adminClickState = 'land';
+  document.getElementById('adminBounceToggle').classList.remove('active');
+  document.getElementById('adminBounceToggle').querySelector('.bounce-toggle-icon').textContent = '◇';
+  document.getElementById('adminBounceCountWrap').style.display = 'none';
+  document.getElementById('adminBounceCount').textContent = '1';
+  updateAdminPickerLabel();
   updateAdminMapPreview();
   renderMapList(); if (selectedMap === mapId) renderMarkers(); updateTopbar(); closeAdmin();
 }
