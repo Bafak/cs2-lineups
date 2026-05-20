@@ -75,7 +75,8 @@
   .map-placeholder { position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
   .map-image-container { position:relative; display:inline-block; }
   .map-image { display:block; max-width:100%; max-height:calc(100vh - 52px - 44px - 40px); width:auto; height:auto; opacity:0.9; user-select:none; -webkit-user-drag:none; }
-  .map-overlay { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
+  .map-overlay { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:auto; }
+  .map-overlay > * { pointer-events:auto; }
 
   /* DOTTED LINE between throw and land */
   .lineup-line { position:absolute; pointer-events:none; z-index:5; }
@@ -204,7 +205,7 @@
   .btn-add-img { background:transparent; border:1px dashed var(--border2); color:var(--text-dim); padding:6px 12px; font-family:var(--font-mono); font-size:11px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; width:100%; transition:all 0.12s; margin-top:4px; }
   .btn-add-img:hover { border-color:var(--accent); color:var(--accent); }
 
-  .coord-picker-area { position:relative; width:100%; background:#000; border:1px solid var(--border2); cursor:crosshair; overflow:hidden; margin-top:4px; }
+  .coord-picker-area { position:relative; width:100%; max-width:600px; margin:4px auto 0; background:#000; border:1px solid var(--border2); cursor:crosshair; overflow:hidden; }
   .coord-picker-area img { width:100%; display:block; opacity:0.8; pointer-events:none; user-select:none; }
   .coord-crosshair { position:absolute; transform:translate(-50%,-50%); width:16px; height:16px; border:2px solid var(--accent); border-radius:50%; pointer-events:none; display:none; }
   .coord-crosshair::after { content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:4px; height:4px; background:var(--accent); border-radius:50%; }
@@ -408,9 +409,9 @@
             <textarea class="form-textarea" id="editNotes"></textarea>
           </div>
           <div class="form-group">
-            <label class="form-label">POSITION ON MAP - click to reposition</label>
+            <label class="form-label">POSITION ON MAP - 1st click = LAND, 2nd click = THROW</label>
             <div id="editMapPickerWrap"></div>
-            <div class="coord-hint">X: <span id="editCoordX">-</span> &nbsp; Y: <span id="editCoordY">-</span></div>
+            <div class="coord-hint">LAND: <span id="editCoordLX">-</span>,<span id="editCoordLY">-</span> &nbsp;|&nbsp; THROW: <span id="editCoordX">-</span>,<span id="editCoordY">-</span></div>
           </div>
           <div class="edit-footer">
             <button class="btn-secondary" onclick="cancelEdit()">CANCEL</button>
@@ -501,9 +502,9 @@
         <textarea class="form-textarea" id="adminNotes" placeholder="Description, timing, where to stand..."></textarea>
       </div>
       <div class="form-group">
-        <label class="form-label">POSITION ON MAP - 1st click = THROW, 2nd click = LAND</label>
+        <label class="form-label">POSITION ON MAP - 1st click = LAND, 2nd click = THROW</label>
         <div id="adminMapPickerWrap"><div class="map-select-hint">Select a map first</div></div>
-        <div class="coord-hint">THROW: <span id="coordX">-</span>,<span id="coordY">-</span> &nbsp;|&nbsp; LAND: <span id="coordLX">-</span>,<span id="coordLY">-</span></div>
+        <div class="coord-hint">LAND: <span id="coordLX">-</span>,<span id="coordLY">-</span> &nbsp;|&nbsp; THROW: <span id="coordX">-</span>,<span id="coordY">-</span></div>
       </div>
     </div>
     <div class="admin-footer">
@@ -552,7 +553,8 @@ let adminPickedX = null, adminPickedY = null, adminPickedLX = null, adminPickedL
 let currentAdminMediaType = 'video';
 let galleryImages = [], galleryIndex = 0;
 let currentModalLineupId = null;
-let editPickedX = null, editPickedY = null;
+let editPickedX = null, editPickedY = null, editPickedLX = null, editPickedLY = null;
+let editClickState = 'land';
 let currentEditMediaType = 'video';
 
 function saveData() { localStorage.setItem('nadeVaultLineups', JSON.stringify(lineups)); }
@@ -953,15 +955,26 @@ function populateEditForm(lineup) {
     });
   }
 
-  // map picker
+  // map picker - throw + land
   editPickedX = lineup.x; editPickedY = lineup.y;
+  editPickedLX = lineup.lx != null ? lineup.lx : null;
+  editPickedLY = lineup.ly != null ? lineup.ly : null;
+  editClickState = 'throw';
   const wrap = document.getElementById('editMapPickerWrap');
   const imgUrl = MAP_RADAR_IMGS[lineup.map];
   if (imgUrl) {
-    wrap.innerHTML = '<div class="coord-picker-area" id="editCoordPicker" onclick="editPickCoords(event)"><img src="' + imgUrl + '" alt="map" draggable="false"><div class="coord-crosshair" id="editCoordCrosshair" style="display:block;left:' + lineup.x + '%;top:' + lineup.y + '%"></div></div>';
+    let landCrosshair = '';
+    let lineSvg = '';
+    if (editPickedLX != null) {
+      landCrosshair = '<div id="editCoordLandCrosshair" style="position:absolute;transform:translate(-50%,-50%);width:14px;height:14px;border:2px solid #fff;border-radius:50%;pointer-events:none;background:rgba(255,255,255,0.2);left:' + editPickedLX + '%;top:' + editPickedLY + '%;"></div>';
+      lineSvg = '<svg id="editPickerLine" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;"><line x1="' + lineup.x + '%" y1="' + lineup.y + '%" x2="' + editPickedLX + '%" y2="' + editPickedLY + '%" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-dasharray="5,4"/></svg>';
+    }
+    wrap.innerHTML = '<div class="coord-picker-area" id="editCoordPicker" onclick="editPickCoords(event)"><img src="' + imgUrl + '" alt="map" draggable="false"><div class="coord-crosshair" id="editCoordCrosshair" style="display:block;left:' + lineup.x + '%;top:' + lineup.y + '%"></div>' + landCrosshair + lineSvg + '</div>';
   }
   document.getElementById('editCoordX').textContent = lineup.x + '%';
   document.getElementById('editCoordY').textContent = lineup.y + '%';
+  document.getElementById('editCoordLX').textContent = editPickedLX != null ? editPickedLX + '%' : '-';
+  document.getElementById('editCoordLY').textContent = editPickedLY != null ? editPickedLY + '%' : '-';
 }
 
 function switchEditMediaType(type) {
@@ -984,13 +997,44 @@ function addEditImageRow() {
 function editPickCoords(e) {
   const picker = document.getElementById('editCoordPicker');
   const rect = picker.getBoundingClientRect();
-  const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
-  const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
-  editPickedX = parseFloat(x); editPickedY = parseFloat(y);
-  document.getElementById('editCoordX').textContent = x + '%';
-  document.getElementById('editCoordY').textContent = y + '%';
-  const ch = document.getElementById('editCoordCrosshair');
-  if (ch) { ch.style.display = 'block'; ch.style.left = x + '%'; ch.style.top = y + '%'; }
+  const x = parseFloat(((e.clientX - rect.left) / rect.width * 100).toFixed(1));
+  const y = parseFloat(((e.clientY - rect.top) / rect.height * 100).toFixed(1));
+
+  if (editClickState === 'land') {
+    editPickedLX = x; editPickedLY = y;
+    document.getElementById('editCoordLX').textContent = x + '%';
+    document.getElementById('editCoordLY').textContent = y + '%';
+    let lch = document.getElementById('editCoordLandCrosshair');
+    if (!lch) {
+      lch = document.createElement('div');
+      lch.id = 'editCoordLandCrosshair';
+      lch.style.cssText = 'position:absolute;transform:translate(-50%,-50%);width:16px;height:16px;border:2px solid var(--accent);border-radius:50%;pointer-events:none;background:rgba(232,160,32,0.2);';
+      document.getElementById('editCoordPicker').appendChild(lch);
+    }
+    lch.style.left = x + '%'; lch.style.top = y + '%';
+    editClickState = 'throw';
+  } else {
+    editPickedX = x; editPickedY = y;
+    document.getElementById('editCoordX').textContent = x + '%';
+    document.getElementById('editCoordY').textContent = y + '%';
+    const ch = document.getElementById('editCoordCrosshair');
+    if (ch) { ch.style.display = 'block'; ch.style.left = x + '%'; ch.style.top = y + '%'; }
+    drawEditPickerLine();
+    editClickState = 'land';
+  }
+}
+
+function drawEditPickerLine() {
+  if (editPickedX == null || editPickedLX == null) return;
+  let line = document.getElementById('editPickerLine');
+  if (!line) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.id = 'editPickerLine';
+    svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;';
+    document.getElementById('editCoordPicker').appendChild(svg);
+    line = svg;
+  }
+  line.innerHTML = '<line x1="' + editPickedX + '%" y1="' + editPickedY + '%" x2="' + editPickedLX + '%" y2="' + editPickedLY + '%" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-dasharray="5,4"/>';
 }
 
 function saveEdit() {
@@ -1011,6 +1055,7 @@ function saveEdit() {
     lineup.video = '';
   }
   if (editPickedX !== null) { lineup.x = editPickedX; lineup.y = editPickedY; }
+  if (editPickedLX !== null) { lineup.lx = editPickedLX; lineup.ly = editPickedLY; }
   saveData();
   renderMapList(); renderMarkers(); updateTopbar();
   // switch back to view and refresh
@@ -1067,14 +1112,14 @@ function updateAdminMapPreview() {
   const imgUrl = MAP_RADAR_IMGS[mapId];
   wrap.innerHTML = '<div class="coord-picker-area" id="coordPicker" onclick="pickCoords(event)"><img src="' + imgUrl + '" alt="map" draggable="false"><div class="coord-crosshair" id="coordCrosshair"></div></div>';
   adminPickedX = null; adminPickedY = null; adminPickedLX = null; adminPickedLY = null;
-  adminClickState = 'throw';
+  adminClickState = 'land';
   document.getElementById('coordX').textContent = '-';
   document.getElementById('coordY').textContent = '-';
   document.getElementById('coordLX').textContent = '-';
   document.getElementById('coordLY').textContent = '-';
 }
 
-let adminClickState = 'throw'; // 'throw' or 'land'
+let adminClickState = 'land'; // first click = land now
 
 function pickCoords(e) {
   const picker = document.getElementById('coordPicker');
@@ -1082,30 +1127,27 @@ function pickCoords(e) {
   const x = parseFloat(((e.clientX - rect.left) / rect.width * 100).toFixed(1));
   const y = parseFloat(((e.clientY - rect.top) / rect.height * 100).toFixed(1));
 
-  if (adminClickState === 'throw') {
-    adminPickedX = x; adminPickedY = y;
-    document.getElementById('coordX').textContent = x + '%';
-    document.getElementById('coordY').textContent = y + '%';
-    // move throw crosshair
-    let ch = document.getElementById('coordCrosshair');
-    if (ch) { ch.style.display = 'block'; ch.style.left = x + '%'; ch.style.top = y + '%'; }
-    adminClickState = 'land';
-  } else {
+  if (adminClickState === 'land') {
     adminPickedLX = x; adminPickedLY = y;
     document.getElementById('coordLX').textContent = x + '%';
     document.getElementById('coordLY').textContent = y + '%';
-    // land crosshair
     let lch = document.getElementById('coordLandCrosshair');
     if (!lch) {
       lch = document.createElement('div');
       lch.id = 'coordLandCrosshair';
-      lch.style.cssText = 'position:absolute;transform:translate(-50%,-50%);width:14px;height:14px;border:2px solid #fff;border-radius:50%;pointer-events:none;background:rgba(255,255,255,0.2);';
+      lch.style.cssText = 'position:absolute;transform:translate(-50%,-50%);width:16px;height:16px;border:2px solid var(--accent);border-radius:50%;pointer-events:none;background:rgba(232,160,32,0.2);';
       document.getElementById('coordPicker').appendChild(lch);
     }
     lch.style.left = x + '%'; lch.style.top = y + '%';
-    // draw preview line on picker
+    adminClickState = 'throw';
+  } else {
+    adminPickedX = x; adminPickedY = y;
+    document.getElementById('coordX').textContent = x + '%';
+    document.getElementById('coordY').textContent = y + '%';
+    let ch = document.getElementById('coordCrosshair');
+    if (ch) { ch.style.display = 'block'; ch.style.left = x + '%'; ch.style.top = y + '%'; }
     drawPickerLine();
-    adminClickState = 'throw'; // reset for next lineup
+    adminClickState = 'land';
   }
 }
 
@@ -1131,8 +1173,8 @@ function saveLineup() {
   const notes = document.getElementById('adminNotes').value.trim();
   if (!mapId) { alert('Select a map.'); return; }
   if (!name) { alert('Enter a lineup name.'); return; }
-  if (adminPickedX === null) { alert('Click on the map twice - first throw position, then land position.'); return; }
-  if (adminPickedLX === null) { alert('Click on the map a second time to set the land position.'); return; }
+  if (adminPickedLX === null) { alert('Click on the map first to set the land position.'); return; }
+  if (adminPickedX === null) { alert('Click on the map a second time to set the throw position.'); return; }
   let mediaType = currentAdminMediaType, video = '', images = [];
   if (mediaType === 'video') {
     video = document.getElementById('adminVideo').value.trim();
