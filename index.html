@@ -24,6 +24,21 @@
   .header-right { display:flex; gap:8px; align-items:center; }
   .btn-admin { background:transparent; border:1px solid var(--border2); color:var(--text-dim); padding:6px 14px; font-family:var(--font-main); font-size:13px; font-weight:600; letter-spacing:1px; cursor:pointer; text-transform:uppercase; transition:all 0.15s; }
   .btn-admin:hover { border-color:var(--accent); color:var(--accent); }
+  .save-status { font-family:var(--font-mono); font-size:11px; letter-spacing:1px; }
+  .save-status.saving { color:var(--text-dim); }
+  .save-status.saved { color:#60c060; }
+  .save-status.error { color:var(--molly); }
+
+  /* DRAG AND DROP IMAGE UPLOAD */
+  .dropzone { border:2px dashed var(--border2); padding:20px; text-align:center; cursor:pointer; transition:all 0.15s; position:relative; }
+  .dropzone:hover, .dropzone.dragover { border-color:var(--accent); background:rgba(232,160,32,0.05); }
+  .dropzone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+  .dropzone-text { font-family:var(--font-mono); font-size:11px; color:var(--text-dim); letter-spacing:1px; pointer-events:none; }
+  .dropzone-preview { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .dropzone-thumb { width:60px; height:60px; object-fit:cover; border:1px solid var(--border2); position:relative; }
+  .dropzone-thumb-wrap { position:relative; display:inline-block; }
+  .dropzone-thumb-remove { position:absolute; top:-4px; right:-4px; width:16px; height:16px; background:var(--molly); border:none; color:#fff; cursor:pointer; font-size:10px; display:flex; align-items:center; justify-content:center; border-radius:50%; }
+  .upload-progress { font-family:var(--font-mono); font-size:11px; color:var(--accent); margin-top:6px; }
 
   .app { display:flex; height:calc(100vh - 52px); }
 
@@ -252,6 +267,7 @@
 <header>
   <div class="logo">NADE VAULT <span>// CS2</span></div>
   <div class="header-right">
+    <span class="save-status" id="saveStatus"></span>
     <button class="btn-admin" onclick="openAdmin()">+ ADD LINEUP</button>
   </div>
 </header>
@@ -418,9 +434,16 @@
             <input class="form-input" id="editVideo" type="text" placeholder="https://youtube.com/watch?v=..." />
           </div>
           <div id="editImagesField" class="form-group" style="display:none">
-            <label class="form-label">IMAGE URLS (in order, max 10)</label>
-            <div class="image-url-list" id="editImageUrlList"></div>
-            <button class="btn-add-img" onclick="addEditImageRow()">+ ADD IMAGE</button>
+            <label class="form-label">IMAGES (drag & drop or click, max 10, in order)</label>
+            <div class="dropzone" id="editDropzone"
+              ondragover="handleDragOver(event,'editDropzone')"
+              ondragleave="handleDragLeave('editDropzone')"
+              ondrop="handleDrop(event,'edit')">
+              <input type="file" accept="image/*" multiple onchange="handleFileSelect(event,'edit')">
+              <div class="dropzone-text">DROP IMAGES HERE OR CLICK TO SELECT</div>
+            </div>
+            <div class="dropzone-preview" id="editImagePreview"></div>
+            <div class="upload-progress" id="editUploadProgress"></div>
           </div>
           <div class="form-group">
             <label class="form-label">NOTES</label>
@@ -513,14 +536,16 @@
         <input class="form-input" id="adminVideo" type="text" placeholder="https://youtube.com/watch?v=..." />
       </div>
       <div id="adminImagesField" class="form-group" style="display:none">
-        <label class="form-label">IMAGE URLS (in order, max 10)</label>
-        <div class="image-url-list" id="adminImageUrlList">
-          <div class="image-url-row">
-            <input class="form-input" type="text" placeholder="https://... image URL #1" />
-            <button class="btn-remove-img" onclick="removeImageRow(this,'adminImageUrlList')">&#10005;</button>
-          </div>
+        <label class="form-label">IMAGES (drag & drop or click, max 10, in order)</label>
+        <div class="dropzone" id="adminDropzone"
+          ondragover="handleDragOver(event,'adminDropzone')"
+          ondragleave="handleDragLeave('adminDropzone')"
+          ondrop="handleDrop(event,'admin')">
+          <input type="file" accept="image/*" multiple onchange="handleFileSelect(event,'admin')">
+          <div class="dropzone-text">DROP IMAGES HERE OR CLICK TO SELECT</div>
         </div>
-        <button class="btn-add-img" onclick="addImageRow('adminImageUrlList')">+ ADD IMAGE</button>
+        <div class="dropzone-preview" id="adminImagePreview"></div>
+        <div class="upload-progress" id="adminUploadProgress"></div>
       </div>
       <div class="form-group">
         <label class="form-label">NOTES (optional)</label>
@@ -572,16 +597,102 @@ const SEG_LABELS = { standard:'Standard', execute:'Execute', instant_smokes:'Ins
 const STAGES = ['new','refresh','learnt'];
 const STAGE_LABELS = { new:'New', refresh:'Refresh', learnt:'Learnt' };
 
+// ============================================================
+// GITHUB API CONFIG - vlož svůj token sem
+// ============================================================
+const GITHUB_TOKEN = 'VLOZ_SVUJ_TOKEN_SEM';
+const GITHUB_OWNER = 'Bafak';
+const GITHUB_REPO = 'cs2-nade-vault';
+const LINEUPS_PATH = 'lineups.json';
+const IMAGES_PATH = 'images/lineups';
+
+async function githubRequest(method, path, body) {
+  const res = await fetch('https://api.github.com/repos/' + GITHUB_OWNER + '/' + GITHUB_REPO + '/contents/' + path, {
+    method,
+    headers: {
+      'Authorization': 'token ' + GITHUB_TOKEN,
+      'Content-Type': 'application/json',
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) throw new Error('GitHub API error: ' + res.status + ' ' + await res.text());
+  return res.json();
+}
+
+let lineupsSha = null; // SHA needed for updates
+
+async function loadLineupsFromGitHub() {
+  try {
+    const data = await githubRequest('GET', LINEUPS_PATH);
+    lineupsSha = data.sha;
+    const json = JSON.parse(atob(data.content.replace(/\n/g,'')));
+    return migrateLineups(json);
+  } catch(e) {
+    console.warn('Could not load from GitHub, using localStorage fallback:', e);
+    return migrateLineups(JSON.parse(localStorage.getItem('nadeVaultLineups') || '[]'));
+  }
+}
+
+async function saveData() {
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(lineups, null, 2))));
+  const body = {
+    message: 'Update lineups',
+    content,
+    sha: lineupsSha,
+  };
+  try {
+    showSaveStatus('saving');
+    const res = await githubRequest('PUT', LINEUPS_PATH, body);
+    lineupsSha = res.content.sha;
+    localStorage.setItem('nadeVaultLineups', JSON.stringify(lineups));
+    showSaveStatus('saved');
+  } catch(e) {
+    console.error('GitHub save failed, saved to localStorage only:', e);
+    localStorage.setItem('nadeVaultLineups', JSON.stringify(lineups));
+    showSaveStatus('error');
+  }
+}
+
+async function uploadImageToGitHub(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result.split(',')[1];
+      const ext = file.name.split('.').pop();
+      const filename = IMAGES_PATH + '/' + Date.now() + '.' + ext;
+      try {
+        const res = await githubRequest('PUT', filename, {
+          message: 'Upload image ' + file.name,
+          content: base64,
+        });
+        const url = 'https://raw.githubusercontent.com/' + GITHUB_OWNER + '/' + GITHUB_REPO + '/main/' + filename;
+        resolve(url);
+      } catch(e) { reject(e); }
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function showSaveStatus(status) {
+  const el = document.getElementById('saveStatus');
+  if (!el) return;
+  el.className = 'save-status ' + status;
+  el.textContent = status === 'saving' ? 'SAVING...' : status === 'saved' ? 'SAVED ✓' : 'SAVE ERROR';
+  if (status !== 'saving') setTimeout(() => { el.textContent = ''; el.className = 'save-status'; }, 2000);
+}
+
 function migrateLineups(data) {
   return data.filter(l => SEGMENTS.includes(l.segment) || l.segment == null).map(l => {
     if (!l.segment || !SEGMENTS.includes(l.segment)) l.segment = 'standard';
     if (!STAGES.includes(l.stage)) l.stage = 'new';
     if (!l.mediaType) { l.mediaType = 'video'; l.video = l.media || ''; l.images = []; delete l.media; }
+    if (!l.bounces) l.bounces = [];
     return l;
   });
 }
 
-let lineups = migrateLineups(JSON.parse(localStorage.getItem('nadeVaultLineups') || '[]'));
+let lineups = [];
 let selectedMap = null;
 let activeNadeTypes = new Set(['smoke']);
 let multiNadeMode = false;
@@ -646,7 +757,16 @@ function toggleEditBounce() {
 
 function saveData() { localStorage.setItem('nadeVaultLineups', JSON.stringify(lineups)); }
 
-function init() { renderMapList(); renderSegmentList(); renderStageList(); selectMap('mirage'); }
+async function init() {
+  renderMapList();
+  renderSegmentList();
+  renderStageList();
+  showSaveStatus('saving');
+  lineups = await loadLineupsFromGitHub();
+  showSaveStatus('saved');
+  renderMapList();
+  selectMap('mirage');
+}
 
 function renderMapList() {
   const el = document.getElementById('mapList');
@@ -1062,15 +1182,7 @@ function populateEditForm(lineup) {
   if (mediaType === 'video') {
     document.getElementById('editVideo').value = lineup.video || '';
   } else {
-    const list = document.getElementById('editImageUrlList');
-    list.innerHTML = '';
-    const imgs = lineup.images && lineup.images.length ? lineup.images : [''];
-    imgs.forEach((url, i) => {
-      const row = document.createElement('div');
-      row.className = 'image-url-row';
-      row.innerHTML = '<input class="form-input" type="text" value="' + (url||'') + '" placeholder="https://... image URL #' + (i+1) + '" /><button class="btn-remove-img" onclick="removeImageRow(this,\'editImageUrlList\')">&#10005;</button>';
-      list.appendChild(row);
-    });
+    preloadEditImages(lineup.images || []);
   }
 
   // map picker - throw + land
@@ -1202,7 +1314,7 @@ function drawEditPickerLine() {
   }
 }
 
-function saveEdit() {
+async function saveEdit() {
   const lineup = lineups.find(l => l.id === currentModalLineupId);
   if (!lineup) return;
   lineup.map = document.getElementById('editMap').value;
@@ -1216,16 +1328,15 @@ function saveEdit() {
     lineup.video = document.getElementById('editVideo').value.trim();
     lineup.images = [];
   } else {
-    lineup.images = [...document.getElementById('editImageUrlList').querySelectorAll('input')].map(i => i.value.trim()).filter(v => v);
+    lineup.images = [...editUploadedImages];
     lineup.video = '';
   }
   if (editPickedX !== null) { lineup.x = editPickedX; lineup.y = editPickedY; }
   if (editPickedLX !== null) { lineup.lx = editPickedLX; lineup.ly = editPickedLY; }
   if (editPickedBX !== null) { lineup.bx = editPickedBX; lineup.by = editPickedBY; }
-  else if (editPickedBX === null && !editBounce) { lineup.bx = null; lineup.by = null; }
-  saveData();
+  else if (!editBounce) { lineup.bx = null; lineup.by = null; }
+  await saveData();
   renderMapList(); renderMarkers(); updateTopbar();
-  // switch back to view and refresh
   document.getElementById('modalInner').classList.remove('editing');
   document.getElementById('editToggleBtn').textContent = 'EDIT';
   populateModalView(lineup);
@@ -1236,11 +1347,11 @@ function cancelEdit() {
   document.getElementById('editToggleBtn').textContent = 'EDIT';
 }
 
-function deleteCurrentLineup() {
+async function deleteCurrentLineup() {
   if (!currentModalLineupId) return;
   if (!confirm('Delete this lineup?')) return;
   lineups = lineups.filter(l => l.id !== currentModalLineupId);
-  saveData(); renderMapList(); renderMarkers(); updateTopbar(); closeModal();
+  await saveData(); renderMapList(); renderMarkers(); updateTopbar(); closeModal();
 }
 
 // ---- ADD LINEUP PANEL ----
@@ -1351,7 +1462,7 @@ function drawPickerLine() {
   svg.innerHTML = '<polyline points="' + pts.join(', ') + '" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-dasharray="5,4"/>';
 }
 
-function saveLineup() {
+async function saveLineup() {
   const mapId = document.getElementById('adminMap').value;
   const type = document.getElementById('adminType').value;
   const name = document.getElementById('adminName').value.trim();
@@ -1366,8 +1477,8 @@ function saveLineup() {
   if (mediaType === 'video') {
     video = document.getElementById('adminVideo').value.trim();
   } else {
-    images = [...document.getElementById('adminImageUrlList').querySelectorAll('input')].map(i => i.value.trim()).filter(v => v);
-    if (!images.length) { alert('Add at least one image URL, or switch to Video.'); return; }
+    images = [...adminUploadedImages];
+    if (!images.length) { alert('Add at least one image, or switch to Video.'); return; }
   }
 
   // Check if there's an existing land position nearby - offer to group
@@ -1379,12 +1490,12 @@ function saveLineup() {
   }
 
   lineups.push({ id:'l'+Date.now(), map:mapId, type, name, segment:seg, stage, mediaType, video, images, x:adminPickedX, y:adminPickedY, lx:finalLx, ly:finalLy, bounces:adminBounce ? [...adminBouncePoints] : [], notes });
-  saveData();
+  await saveData();
   document.getElementById('adminMap').value = '';
   document.getElementById('adminName').value = '';
   document.getElementById('adminVideo').value = '';
   document.getElementById('adminNotes').value = '';
-  document.getElementById('adminImageUrlList').innerHTML = '<div class="image-url-row"><input class="form-input" type="text" placeholder="https://... image URL #1" /><button class="btn-remove-img" onclick="removeImageRow(this,\'adminImageUrlList\')">&#10005;</button></div>';
+  resetDropzone('admin');
   adminPickedX = null; adminPickedY = null; adminPickedLX = null; adminPickedLY = null;
   adminBouncePoints = []; adminBounce = false; adminBounceCount = 1;
   adminClickState = 'land';
@@ -1405,6 +1516,84 @@ function copyExport() {
     const btn = event.target; btn.textContent = 'COPIED!';
     setTimeout(() => btn.textContent = 'COPY JSON', 1500);
   });
+}
+
+// ---- IMAGE UPLOAD STATE ----
+let adminUploadedImages = []; // array of URLs
+let editUploadedImages = [];
+
+function handleDragOver(e, id) {
+  e.preventDefault();
+  document.getElementById(id).classList.add('dragover');
+}
+function handleDragLeave(id) {
+  document.getElementById(id).classList.remove('dragover');
+}
+function handleDrop(e, context) {
+  e.preventDefault();
+  const id = context + 'Dropzone';
+  document.getElementById(id).classList.remove('dragover');
+  uploadFiles([...e.dataTransfer.files], context);
+}
+function handleFileSelect(e, context) {
+  uploadFiles([...e.target.files], context);
+  e.target.value = '';
+}
+
+async function uploadFiles(files, context) {
+  const imgFiles = files.filter(f => f.type.startsWith('image/')).slice(0, 10);
+  if (!imgFiles.length) return;
+  const progress = document.getElementById(context + 'UploadProgress');
+  const preview = document.getElementById(context + 'ImagePreview');
+  const arr = context === 'admin' ? adminUploadedImages : editUploadedImages;
+
+  for (let i = 0; i < imgFiles.length; i++) {
+    progress.textContent = 'UPLOADING ' + (i+1) + '/' + imgFiles.length + '...';
+    try {
+      const url = await uploadImageToGitHub(imgFiles[i]);
+      arr.push(url);
+      addThumbToPreview(preview, url, context, arr.length - 1);
+    } catch(e) {
+      progress.textContent = 'UPLOAD FAILED: ' + e.message;
+      return;
+    }
+  }
+  progress.textContent = 'UPLOADED ' + imgFiles.length + ' IMAGE' + (imgFiles.length > 1 ? 'S' : '') + ' ✓';
+  setTimeout(() => { progress.textContent = ''; }, 2000);
+}
+
+function addThumbToPreview(container, url, context, idx) {
+  const wrap = document.createElement('div');
+  wrap.className = 'dropzone-thumb-wrap';
+  wrap.dataset.idx = idx;
+  wrap.innerHTML = '<img class="dropzone-thumb" src="' + url + '"><button class="dropzone-thumb-remove" onclick="removeThumb(\'' + context + '\',' + idx + ')">✕</button>';
+  container.appendChild(wrap);
+}
+
+function removeThumb(context, idx) {
+  const arr = context === 'admin' ? adminUploadedImages : editUploadedImages;
+  arr.splice(idx, 1);
+  // re-render preview
+  const preview = document.getElementById(context + 'ImagePreview');
+  preview.innerHTML = '';
+  arr.forEach((url, i) => addThumbToPreview(preview, url, context, i));
+}
+
+function resetDropzone(context) {
+  if (context === 'admin') adminUploadedImages = [];
+  else editUploadedImages = [];
+  const preview = document.getElementById(context + 'ImagePreview');
+  if (preview) preview.innerHTML = '';
+  const progress = document.getElementById(context + 'UploadProgress');
+  if (progress) progress.textContent = '';
+}
+
+function preloadEditImages(images) {
+  editUploadedImages = [...images];
+  const preview = document.getElementById('editImagePreview');
+  if (!preview) return;
+  preview.innerHTML = '';
+  editUploadedImages.forEach((url, i) => addThumbToPreview(preview, url, 'edit', i));
 }
 
 init();
