@@ -1,1 +1,1 @@
-// Delted, using Supabase instead
+// Deleted, using Supabase instead
