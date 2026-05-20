@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NADE VAULT by Bafak</title>
+<title>NADE VAULT</title>
 <script src="config.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -767,8 +767,6 @@ function toggleEditBounce() {
     document.getElementById('editCoordBY').textContent = '-';
   }
 }
-
-function saveData() { localStorage.setItem('nadeVaultLineups', JSON.stringify(lineups)); }
 
 async function init() {
   renderMapList();
