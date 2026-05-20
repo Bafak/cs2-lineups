@@ -1,1 +1,1 @@
-const GITHUB_TOKEN = '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';
+// Delted, using Supabase instead
