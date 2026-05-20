@@ -18,5 +18,25 @@
     "notes": "",
     "bx": 68.5,
     "by": 43.1
+  },
+  {
+    "id": "l1779289284083",
+    "map": "mirage",
+    "type": "smoke",
+    "name": "TestSupabase",
+    "segment": "standard",
+    "side": "t",
+    "stage": "new",
+    "mediaType": "images",
+    "video": "",
+    "images": [
+      "https://raw.githubusercontent.com/Bafak/cs2-nade-vault/main/images/lineups/1779289277795.png"
+    ],
+    "x": 70.2,
+    "y": 46.6,
+    "lx": 70.4,
+    "ly": 23,
+    "bounces": [],
+    "notes": ""
   }
 ]
