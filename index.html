@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NADE VAULT</title>
+<script src="config.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
@@ -598,9 +599,8 @@ const STAGES = ['new','refresh','learnt'];
 const STAGE_LABELS = { new:'New', refresh:'Refresh', learnt:'Learnt' };
 
 // ============================================================
-// GITHUB API CONFIG - vlož svůj token sem
+// GITHUB API CONFIG - token is loaded from config.js
 // ============================================================
-const GITHUB_TOKEN = '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';
 const GITHUB_OWNER = 'Bafak';
 const GITHUB_REPO = 'cs2-nade-vault';
 const LINEUPS_PATH = 'lineups.json';
@@ -610,7 +610,7 @@ async function githubRequest(method, path, body) {
   const res = await fetch('https://api.github.com/repos/' + GITHUB_OWNER + '/' + GITHUB_REPO + '/contents/' + path, {
     method,
     headers: {
-      'Authorization': 'token ' + GITHUB_TOKEN,
+      'Authorization': 'Bearer ' + GITHUB_TOKEN,
       'Content-Type': 'application/json',
     },
     body: body ? JSON.stringify(body) : undefined,
@@ -839,9 +839,13 @@ function toggleNadeFilter(type) {
   if (multiNadeMode) {
     if (activeNadeTypes.has(type)) { if (activeNadeTypes.size > 1) activeNadeTypes.delete(type); }
     else { activeNadeTypes.add(type); }
+    // update ALL button state
+    document.getElementById('allNadeToggle').classList.toggle('active', activeNadeTypes.size === 4);
   } else {
     activeNadeTypes.clear();
     activeNadeTypes.add(type);
+    document.getElementById('allNadeToggle').classList.remove('active');
+    document.getElementById('multiNadeToggle').classList.remove('active');
   }
   expandedGroupKey = null;
   document.querySelectorAll('.nade-btn').forEach(btn => btn.classList.toggle('active', activeNadeTypes.has(btn.dataset.type)));
@@ -849,11 +853,21 @@ function toggleNadeFilter(type) {
 }
 
 function selectAllNades() {
-  multiNadeMode = true;
-  activeNadeTypes = new Set(['smoke','flash','molly','he']);
-  document.getElementById('allNadeToggle').classList.add('active');
-  document.getElementById('multiNadeToggle').classList.remove('active');
-  document.querySelectorAll('.nade-btn').forEach(btn => btn.classList.add('active'));
+  const allActive = multiNadeMode && activeNadeTypes.size === 4;
+  if (allActive) {
+    // turn off ALL - back to single smoke
+    multiNadeMode = false;
+    activeNadeTypes = new Set(['smoke']);
+    document.getElementById('allNadeToggle').classList.remove('active');
+    document.getElementById('multiNadeToggle').classList.remove('active');
+  } else {
+    // turn on ALL
+    multiNadeMode = true;
+    activeNadeTypes = new Set(['smoke','flash','molly','he']);
+    document.getElementById('allNadeToggle').classList.add('active');
+    document.getElementById('multiNadeToggle').classList.remove('active');
+  }
+  document.querySelectorAll('.nade-btn').forEach(btn => btn.classList.toggle('active', activeNadeTypes.has(btn.dataset.type)));
   expandedGroupKey = null;
   renderMapList(); renderMarkers(); updateTopbar();
 }
