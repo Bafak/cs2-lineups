@@ -1,1 +1,19 @@
-[]
+[
+  {
+    "id": "l1779276736609",
+    "map": "mirage",
+    "type": "smoke",
+    "name": "Test",
+    "segment": "standard",
+    "stage": "new",
+    "mediaType": "video",
+    "video": "",
+    "images": [],
+    "x": 71.8,
+    "y": 45.8,
+    "lx": 38.3,
+    "ly": 44.6,
+    "bounces": [],
+    "notes": ""
+  }
+]
