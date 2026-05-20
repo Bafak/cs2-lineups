@@ -625,8 +625,10 @@ async function loadLineupsFromGitHub() {
   try {
     const data = await githubRequest('GET', LINEUPS_PATH);
     lineupsSha = data.sha;
-    const json = JSON.parse(atob(data.content.replace(/\n/g,'')));
-    return migrateLineups(json);
+    const raw = atob(data.content.replace(/\n/g,''));
+    if (!raw || raw.trim() === '' || raw.trim() === '[]') return [];
+    const json = JSON.parse(raw);
+    return migrateLineups(Array.isArray(json) ? json : []);
   } catch(e) {
     console.warn('Could not load from GitHub, using localStorage fallback:', e);
     return migrateLineups(JSON.parse(localStorage.getItem('nadeVaultLineups') || '[]'));
@@ -665,8 +667,9 @@ async function uploadImageToGitHub(file) {
           message: 'Upload image ' + file.name,
           content: base64,
         });
-        const url = 'https://raw.githubusercontent.com/' + GITHUB_OWNER + '/' + GITHUB_REPO + '/main/' + filename;
-        resolve(url);
+        // Use GitHub API to get authenticated download URL for private repo
+        const fileData = await githubRequest('GET', filename);
+        resolve(fileData.download_url);
       } catch(e) { reject(e); }
     };
     reader.onerror = reject;
