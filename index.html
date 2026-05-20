@@ -68,11 +68,26 @@
 
   .map-area { flex:1; position:relative; overflow:hidden; background:#080a0d; display:flex; align-items:center; justify-content:center; }
   .map-placeholder { position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
-  .map-image-container { position:relative; display:inline-block; }
-  .map-image { display:block; max-height:calc(100vh - 52px - 44px); max-width:100%; width:auto; height:auto; opacity:0.9; user-select:none; -webkit-user-drag:none; }
+  .map-image-container { position:relative; width:100%; height:100%; }
+  .map-image { display:block; width:100%; height:100%; object-fit:contain; opacity:0.9; user-select:none; -webkit-user-drag:none; }
   .map-overlay { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
 
-  .ftm-state { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; width:100%; height:100%; }
+  /* DOTTED LINE between throw and land */
+  .lineup-line { position:absolute; pointer-events:none; z-index:5; }
+
+  /* LAND MARKER */
+  .marker-land { position:absolute; transform:translate(-50%,-50%); pointer-events:none; z-index:9; }
+  .marker-land-inner { width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,0.5); background:rgba(255,255,255,0.15); box-shadow:0 0 6px rgba(0,0,0,0.6); }
+
+  /* DIMMED state - when one lineup is focused */
+  .marker.dimmed { opacity:0.15; pointer-events:none; }
+  .marker-land.dimmed { opacity:0.15; }
+
+  /* HOVER PREVIEW POPUP */
+  .hover-preview { position:absolute; z-index:50; pointer-events:none; background:var(--surface); border:1px solid var(--border2); box-shadow:0 8px 32px rgba(0,0,0,0.8); width:220px; overflow:hidden; transform:translate(-50%, calc(-100% - 16px)); transition:opacity 0.1s; }
+  .hover-preview video { width:100%; display:block; aspect-ratio:16/9; object-fit:cover; }
+  .hover-preview img { width:100%; display:block; aspect-ratio:16/9; object-fit:cover; }
+  .hover-preview-label { padding:6px 8px; font-family:var(--font-mono); font-size:11px; color:var(--text-dim); letter-spacing:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .ftm-text { font-family:var(--font-mono); font-size:32px; color:var(--molly); letter-spacing:4px; text-transform:uppercase; opacity:0.7; }
   .ftm-sub { font-family:var(--font-mono); font-size:12px; color:var(--text-dim); letter-spacing:2px; }
   .no-map { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; color:var(--text-dim); font-family:var(--font-mono); font-size:13px; letter-spacing:2px; }
@@ -80,18 +95,18 @@
 
   .marker { position:absolute; transform:translate(-50%,-50%); cursor:pointer; pointer-events:all; z-index:10; transition:transform 0.1s, filter 0.1s; }
   .marker:hover { transform:translate(-50%,-50%) scale(1.25); filter:brightness(1.3); z-index:20; }
-  .marker-inner { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid rgba(255,255,255,0.15); box-shadow:0 0 10px rgba(0,0,0,0.6); position:relative; }
+  .marker-inner { width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid rgba(255,255,255,0.15); box-shadow:0 0 10px rgba(0,0,0,0.6); position:relative; }
   .marker-inner::after { content:''; position:absolute; inset:-4px; border-radius:50%; border:1px solid currentColor; opacity:0.3; animation:pulse 2s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { transform:scale(1); opacity:0.3; } 50% { transform:scale(1.2); opacity:0.1; } }
-  .marker.smoke .marker-inner { background:rgba(74,158,221,0.85); border-color:var(--smoke); }
+  .marker.smoke .marker-inner { background:rgba(160,160,160,0.85); border-color:#a0a0a0; }
   .marker.flash .marker-inner { background:rgba(240,224,64,0.85); border-color:var(--flash); }
   .marker.molly .marker-inner { background:rgba(232,64,48,0.85); border-color:var(--molly); }
-  .marker.he .marker-inner { background:rgba(96,192,96,0.85); border-color:var(--he); }
+  .marker.he .marker-inner { background:rgba(40,120,220,0.85); border-color:#2878dc; }
 
   /* MODAL */
   .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; display:none; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
   .modal-overlay.open { display:flex; }
-  .modal { background:var(--surface); border:1px solid var(--border2); width:720px; max-width:95vw; max-height:90vh; display:flex; flex-direction:column; box-shadow:0 24px 80px rgba(0,0,0,0.8); }
+  .modal { background:var(--surface); border:1px solid var(--border2); width:90vw; max-width:90vw; max-height:90vh; display:flex; flex-direction:column; box-shadow:0 24px 80px rgba(0,0,0,0.8); }
 
   .modal-header { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
   .modal-header-left { flex:1; min-width:0; }
@@ -461,9 +476,9 @@
         <textarea class="form-textarea" id="adminNotes" placeholder="Description, timing, where to stand..."></textarea>
       </div>
       <div class="form-group">
-        <label class="form-label">POSITION ON MAP - click to place marker</label>
+        <label class="form-label">POSITION ON MAP - 1st click = THROW, 2nd click = LAND</label>
         <div id="adminMapPickerWrap"><div class="map-select-hint">Select a map first</div></div>
-        <div class="coord-hint">X: <span id="coordX">-</span> &nbsp; Y: <span id="coordY">-</span></div>
+        <div class="coord-hint">THROW: <span id="coordX">-</span>,<span id="coordY">-</span> &nbsp;|&nbsp; LAND: <span id="coordLX">-</span>,<span id="coordLY">-</span></div>
       </div>
     </div>
     <div class="admin-footer">
@@ -496,9 +511,8 @@ const STAGE_LABELS = { new:'New', refresh:'Refresh', learnt:'Learnt' };
 function migrateLineups(data) {
   return data.filter(l => SEGMENTS.includes(l.segment)).map(l => {
     if (!STAGES.includes(l.stage)) l.stage = 'new';
-    if (!l.mediaType) {
-      l.mediaType = 'video'; l.video = l.media || ''; l.images = []; delete l.media;
-    }
+    if (!l.mediaType) { l.mediaType = 'video'; l.video = l.media || ''; l.images = []; delete l.media; }
+    // lx/ly optional - old lineups without land position still work
     return l;
   });
 }
@@ -508,7 +522,7 @@ let selectedMap = null;
 let activeNadeTypes = new Set(['smoke','flash','molly','he']);
 let activeSegments = new Set([...SEGMENTS]);
 let activeStages = new Set([...STAGES]);
-let adminPickedX = null, adminPickedY = null;
+let adminPickedX = null, adminPickedY = null, adminPickedLX = null, adminPickedLY = null;
 let currentAdminMediaType = 'video';
 let galleryImages = [], galleryIndex = 0;
 let currentModalLineupId = null;
@@ -587,22 +601,123 @@ function toggleNadeFilter(type) {
   renderMarkers(); updateTopbar();
 }
 
+let focusedLineupId = null;
+let hoverPreviewEl = null;
+
 function renderMarkers() {
   const overlay = document.getElementById('markerOverlay');
   if (!overlay) return; overlay.innerHTML = '';
   if (!selectedMap || FTM_MAPS.includes(selectedMap)) return;
-  lineups.filter(l => l.map === selectedMap && activeNadeTypes.has(l.type) && activeSegments.has(l.segment) && activeStages.has(l.stage || 'new')).forEach(l => {
+
+  const visible = lineups.filter(l => l.map === selectedMap && activeNadeTypes.has(l.type) && activeSegments.has(l.segment) && activeStages.has(l.stage || 'new'));
+
+  // draw SVG lines first (behind markers)
+  const container = document.getElementById('mapImageContainer');
+  let svg = container.querySelector('.lines-svg');
+  if (!svg) {
+    svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('class','lines-svg');
+    svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:4;overflow:visible;';
+    container.insertBefore(svg, overlay);
+  }
+  svg.innerHTML = '';
+
+  visible.forEach(l => {
+    const isFocused = focusedLineupId === l.id;
+    const isDimmed = focusedLineupId && !isFocused;
+
+    // dotted line if land position exists
+    if (l.lx != null && l.ly != null) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1', l.x + '%'); line.setAttribute('y1', l.y + '%');
+      line.setAttribute('x2', l.lx + '%'); line.setAttribute('y2', l.ly + '%');
+      line.setAttribute('stroke', isDimmed ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.35)');
+      line.setAttribute('stroke-width', '1.5');
+      line.setAttribute('stroke-dasharray', '5,4');
+      svg.appendChild(line);
+
+      // land marker
+      const land = document.createElement('div');
+      land.className = 'marker-land' + (isDimmed ? ' dimmed' : '');
+      land.style.left = l.lx + '%'; land.style.top = l.ly + '%';
+      land.innerHTML = '<div class="marker-land-inner"></div>';
+      overlay.appendChild(land);
+    }
+
+    // throw marker
     const marker = document.createElement('div');
-    marker.className = 'marker ' + l.type;
+    marker.className = 'marker ' + l.type + (isDimmed ? ' dimmed' : '');
     marker.style.left = l.x + '%'; marker.style.top = l.y + '%';
-    marker.innerHTML = '<div class="marker-inner"><img src="images/' + getNadeImg(l.type) + '" width="14" height="14" style="object-fit:contain;filter:brightness(1.3)"></div>';
+    marker.innerHTML = '<div class="marker-inner"><img src="images/' + getNadeImg(l.type) + '" width="9" height="9" style="object-fit:contain;filter:brightness(1.3)"></div>';
     marker.title = l.name;
-    marker.onclick = () => openLineupModal(l);
+
+    // click - focus/unfocus
+    marker.onclick = (e) => {
+      e.stopPropagation();
+      if (focusedLineupId === l.id) {
+        focusedLineupId = null;
+        renderMarkers();
+      } else {
+        focusedLineupId = l.id;
+        renderMarkers();
+        openLineupModal(l);
+      }
+    };
+
+    // hover preview
+    marker.addEventListener('mouseenter', (e) => showHoverPreview(e, l, marker));
+    marker.addEventListener('mouseleave', hideHoverPreview);
+
     overlay.appendChild(marker);
   });
+
+  // click on map background = unfocus
+  overlay.onclick = () => { if (focusedLineupId) { focusedLineupId = null; renderMarkers(); } };
 }
 
 function getNadeImg(type) { return { smoke:'Smoke2.png', flash:'Flashbang.png', molly:'Molotov.png', he:'HEgrenade.png' }[type] || 'Smoke2.png'; }
+
+function showHoverPreview(e, lineup, marker) {
+  hideHoverPreview();
+  const preview = document.createElement('div');
+  preview.className = 'hover-preview';
+  preview.id = 'hoverPreview';
+
+  let mediaHtml = '';
+  if (lineup.mediaType === 'images' && lineup.images && lineup.images.length > 0) {
+    mediaHtml = '<img src="' + lineup.images[0] + '" alt="preview">';
+  } else if (lineup.video) {
+    const ytMatch = lineup.video.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (ytMatch) {
+      mediaHtml = '<img src="https://img.youtube.com/vi/' + ytMatch[1] + '/mqdefault.jpg" alt="preview">';
+    } else if (lineup.video.match(/\.(mp4|webm)$/i)) {
+      mediaHtml = '<video src="' + lineup.video + '" autoplay muted loop playsinline></video>';
+    }
+  }
+
+  if (!mediaHtml) return;
+  preview.innerHTML = mediaHtml + '<div class="hover-preview-label">' + lineup.name + '</div>';
+
+  // position relative to marker
+  const container = document.getElementById('mapImageContainer');
+  const containerRect = container.getBoundingClientRect();
+  const markerRect = marker.getBoundingClientRect();
+  const left = markerRect.left - containerRect.left + markerRect.width / 2;
+  const top = markerRect.top - containerRect.top;
+
+  preview.style.left = left + 'px';
+  preview.style.top = top + 'px';
+  preview.style.position = 'absolute';
+
+  container.appendChild(preview);
+  hoverPreviewEl = preview;
+}
+
+function hideHoverPreview() {
+  if (hoverPreviewEl) { hoverPreviewEl.remove(); hoverPreviewEl = null; }
+  const existing = document.getElementById('hoverPreview');
+  if (existing) existing.remove();
+}
 
 function updateTopbar() {
   const mapLabel = selectedMap ? (MAPS.find(m => m.id === selectedMap)?.label || selectedMap) : '-';
@@ -710,6 +825,8 @@ function closeModal() {
   document.getElementById('galleryNav').style.display = 'none';
   document.getElementById('modalInner').classList.remove('editing');
   currentModalLineupId = null; galleryImages = [];
+  focusedLineupId = null;
+  renderMarkers();
 }
 
 function closeModalOutside(e) { if (e.target === document.getElementById('lineupModal')) closeModal(); }
@@ -866,21 +983,60 @@ function updateAdminMapPreview() {
   if (!mapId) { wrap.innerHTML = '<div class="map-select-hint">Select a map first</div>'; return; }
   const imgUrl = MAP_RADAR_IMGS[mapId];
   wrap.innerHTML = '<div class="coord-picker-area" id="coordPicker" onclick="pickCoords(event)"><img src="' + imgUrl + '" alt="map" draggable="false"><div class="coord-crosshair" id="coordCrosshair"></div></div>';
-  adminPickedX = null; adminPickedY = null;
+  adminPickedX = null; adminPickedY = null; adminPickedLX = null; adminPickedLY = null;
+  adminClickState = 'throw';
   document.getElementById('coordX').textContent = '-';
   document.getElementById('coordY').textContent = '-';
+  document.getElementById('coordLX').textContent = '-';
+  document.getElementById('coordLY').textContent = '-';
 }
+
+let adminClickState = 'throw'; // 'throw' or 'land'
 
 function pickCoords(e) {
   const picker = document.getElementById('coordPicker');
   const rect = picker.getBoundingClientRect();
-  const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
-  const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
-  adminPickedX = parseFloat(x); adminPickedY = parseFloat(y);
-  document.getElementById('coordX').textContent = x + '%';
-  document.getElementById('coordY').textContent = y + '%';
-  const ch = document.getElementById('coordCrosshair');
-  if (ch) { ch.style.display = 'block'; ch.style.left = x + '%'; ch.style.top = y + '%'; }
+  const x = parseFloat(((e.clientX - rect.left) / rect.width * 100).toFixed(1));
+  const y = parseFloat(((e.clientY - rect.top) / rect.height * 100).toFixed(1));
+
+  if (adminClickState === 'throw') {
+    adminPickedX = x; adminPickedY = y;
+    document.getElementById('coordX').textContent = x + '%';
+    document.getElementById('coordY').textContent = y + '%';
+    // move throw crosshair
+    let ch = document.getElementById('coordCrosshair');
+    if (ch) { ch.style.display = 'block'; ch.style.left = x + '%'; ch.style.top = y + '%'; }
+    adminClickState = 'land';
+  } else {
+    adminPickedLX = x; adminPickedLY = y;
+    document.getElementById('coordLX').textContent = x + '%';
+    document.getElementById('coordLY').textContent = y + '%';
+    // land crosshair
+    let lch = document.getElementById('coordLandCrosshair');
+    if (!lch) {
+      lch = document.createElement('div');
+      lch.id = 'coordLandCrosshair';
+      lch.style.cssText = 'position:absolute;transform:translate(-50%,-50%);width:14px;height:14px;border:2px solid #fff;border-radius:50%;pointer-events:none;background:rgba(255,255,255,0.2);';
+      document.getElementById('coordPicker').appendChild(lch);
+    }
+    lch.style.left = x + '%'; lch.style.top = y + '%';
+    // draw preview line on picker
+    drawPickerLine();
+    adminClickState = 'throw'; // reset for next lineup
+  }
+}
+
+function drawPickerLine() {
+  if (adminPickedX == null || adminPickedLX == null) return;
+  let line = document.getElementById('pickerLine');
+  if (!line) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.id = 'pickerLine';
+    svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;';
+    document.getElementById('coordPicker').appendChild(svg);
+    line = svg;
+  }
+  line.innerHTML = '<line x1="' + adminPickedX + '%" y1="' + adminPickedY + '%" x2="' + adminPickedLX + '%" y2="' + adminPickedLY + '%" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-dasharray="5,4"/>';
 }
 
 function saveLineup() {
@@ -892,7 +1048,8 @@ function saveLineup() {
   const notes = document.getElementById('adminNotes').value.trim();
   if (!mapId) { alert('Select a map.'); return; }
   if (!name) { alert('Enter a lineup name.'); return; }
-  if (adminPickedX === null) { alert('Click on the map to set the marker position.'); return; }
+  if (adminPickedX === null) { alert('Click on the map twice - first throw position, then land position.'); return; }
+  if (adminPickedLX === null) { alert('Click on the map a second time to set the land position.'); return; }
   let mediaType = currentAdminMediaType, video = '', images = [];
   if (mediaType === 'video') {
     video = document.getElementById('adminVideo').value.trim();
@@ -900,14 +1057,15 @@ function saveLineup() {
     images = [...document.getElementById('adminImageUrlList').querySelectorAll('input')].map(i => i.value.trim()).filter(v => v);
     if (!images.length) { alert('Add at least one image URL, or switch to Video.'); return; }
   }
-  lineups.push({ id:'l'+Date.now(), map:mapId, type, name, segment:seg, stage, mediaType, video, images, x:adminPickedX, y:adminPickedY, notes });
+  lineups.push({ id:'l'+Date.now(), map:mapId, type, name, segment:seg, stage, mediaType, video, images, x:adminPickedX, y:adminPickedY, lx:adminPickedLX, ly:adminPickedLY, notes });
   saveData();
   document.getElementById('adminMap').value = '';
   document.getElementById('adminName').value = '';
   document.getElementById('adminVideo').value = '';
   document.getElementById('adminNotes').value = '';
   document.getElementById('adminImageUrlList').innerHTML = '<div class="image-url-row"><input class="form-input" type="text" placeholder="https://... image URL #1" /><button class="btn-remove-img" onclick="removeImageRow(this,\'adminImageUrlList\')">&#10005;</button></div>';
-  adminPickedX = null; adminPickedY = null;
+  adminPickedX = null; adminPickedY = null; adminPickedLX = null; adminPickedLY = null;
+  adminClickState = 'throw';
   updateAdminMapPreview();
   renderMapList(); if (selectedMap === mapId) renderMarkers(); updateTopbar(); closeAdmin();
 }
