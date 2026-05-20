@@ -288,16 +288,16 @@
       </div>
       <div class="nade-filters">
         <button class="nade-btn smoke active" data-type="smoke" onclick="toggleNadeFilter('smoke')">
-          <span class="nade-icon"><img src="images/Smoke2.png" width="18" height="18" style="object-fit:contain;opacity:0.9"></span>SMOKE
+          <span class="nade-icon"><img src="images/source/Smoke2.png" width="18" height="18" style="object-fit:contain;opacity:0.9"></span>SMOKE
         </button>
         <button class="nade-btn flash" data-type="flash" onclick="toggleNadeFilter('flash')">
-          <span class="nade-icon"><img src="images/Flashbang.png" width="18" height="18" style="object-fit:contain;opacity:0.9"></span>FLASH
+          <span class="nade-icon"><img src="images/source/Flashbang.png" width="18" height="18" style="object-fit:contain;opacity:0.9"></span>FLASH
         </button>
         <button class="nade-btn molly" data-type="molly" onclick="toggleNadeFilter('molly')">
-          <span class="nade-icon"><img src="images/Molotov.png" width="18" height="18" style="object-fit:contain;opacity:0.9"></span>MOLLY
+          <span class="nade-icon"><img src="images/source/Molotov.png" width="18" height="18" style="object-fit:contain;opacity:0.9"></span>MOLLY
         </button>
         <button class="nade-btn he" data-type="he" onclick="toggleNadeFilter('he')">
-          <span class="nade-icon"><img src="images/HEgrenade.png" width="18" height="18" style="object-fit:contain;opacity:0.9"></span>HE NADE
+          <span class="nade-icon"><img src="images/source/HEgrenade.png" width="18" height="18" style="object-fit:contain;opacity:0.9"></span>HE NADE
         </button>
       </div>
     </div>
@@ -600,7 +600,7 @@ const STAGE_LABELS = { new:'New', refresh:'Refresh', learnt:'Learnt' };
 // ============================================================
 // GITHUB API CONFIG - vlož svůj token sem
 // ============================================================
-const GITHUB_TOKEN = 'VLOZ_SVUJ_TOKEN_SEM';
+const GITHUB_TOKEN = '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';
 const GITHUB_OWNER = 'Bafak';
 const GITHUB_REPO = 'cs2-nade-vault';
 const LINEUPS_PATH = 'lineups.json';
@@ -850,23 +850,49 @@ function toggleNadeFilter(type) {
 
 function selectAllNades() {
   multiNadeMode = true;
-  document.getElementById('multiNadeToggle').classList.add('active');
   activeNadeTypes = new Set(['smoke','flash','molly','he']);
+  document.getElementById('allNadeToggle').classList.add('active');
+  document.getElementById('multiNadeToggle').classList.remove('active');
   document.querySelectorAll('.nade-btn').forEach(btn => btn.classList.add('active'));
   expandedGroupKey = null;
   renderMapList(); renderMarkers(); updateTopbar();
 }
 
 function toggleMultiNade() {
-  multiNadeMode = !multiNadeMode;
-  document.getElementById('multiNadeToggle').classList.toggle('active', multiNadeMode);
-  if (!multiNadeMode && activeNadeTypes.size > 1) {
+  if (multiNadeMode) {
+    // turn off multi - collapse to first active
+    multiNadeMode = false;
     const first = [...activeNadeTypes][0];
     activeNadeTypes.clear();
     activeNadeTypes.add(first);
+    document.getElementById('multiNadeToggle').classList.remove('active');
+    document.getElementById('allNadeToggle').classList.remove('active');
     document.querySelectorAll('.nade-btn').forEach(btn => btn.classList.toggle('active', activeNadeTypes.has(btn.dataset.type)));
+  } else {
+    // turn on multi
+    multiNadeMode = true;
+    document.getElementById('multiNadeToggle').classList.add('active');
+    document.getElementById('allNadeToggle').classList.remove('active');
   }
   expandedGroupKey = null;
+  renderMapList(); renderMarkers(); updateTopbar();
+}
+
+function toggleNadeFilter(type) {
+  if (multiNadeMode) {
+    if (activeNadeTypes.has(type)) { if (activeNadeTypes.size > 1) activeNadeTypes.delete(type); }
+    else { activeNadeTypes.add(type); }
+    // if all 4 selected, highlight ALL button
+    document.getElementById('allNadeToggle').classList.toggle('active', activeNadeTypes.size === 4);
+  } else {
+    // single mode - switch to clicked, deactivate ALL/MULTI
+    activeNadeTypes.clear();
+    activeNadeTypes.add(type);
+    document.getElementById('allNadeToggle').classList.remove('active');
+    document.getElementById('multiNadeToggle').classList.remove('active');
+  }
+  expandedGroupKey = null;
+  document.querySelectorAll('.nade-btn').forEach(btn => btn.classList.toggle('active', activeNadeTypes.has(btn.dataset.type)));
   renderMapList(); renderMarkers(); updateTopbar();
 }
 
@@ -929,7 +955,7 @@ function renderMarkers() {
     landMarker.className = 'marker ' + dominantType + (isDimmed ? ' dimmed' : '') + (isExpanded ? ' expanded' : '');
     landMarker.style.left = group.lx + '%';
     landMarker.style.top = group.ly + '%';
-    landMarker.innerHTML = '<div class="marker-inner"><img src="images/' + getNadeImg(dominantType) + '" width="9" height="9" style="object-fit:contain;filter:brightness(1.3)"></div>';
+    landMarker.innerHTML = '<div class="marker-inner"><img src="' + getNadeImg(dominantType) + '" width="9" height="9" style="object-fit:contain;filter:brightness(1.3)"></div>';
 
     landMarker.onclick = (e) => {
       e.stopPropagation();
@@ -962,15 +988,7 @@ function renderMarkers() {
             seg.setAttribute('stroke-dasharray', '5,4');
             svg.appendChild(seg);
           }
-          // bounce diamond markers
-          bounces.forEach(b => {
-            const bounceEl = document.createElement('div');
-            bounceEl.className = 'marker-bounce';
-            bounceEl.style.left = b.x + '%';
-            bounceEl.style.top = b.y + '%';
-            bounceEl.innerHTML = '<div class="marker-bounce-inner"></div>';
-            overlay.appendChild(bounceEl);
-          });
+          // no bounce diamond markers on the main map - just the lines
         } else {
           const line = document.createElementNS('http://www.w3.org/2000/svg','line');
           line.setAttribute('x1', l.x + '%'); line.setAttribute('y1', l.y + '%');
@@ -998,7 +1016,7 @@ function renderMarkers() {
   overlay.onclick = () => { if (expandedGroupKey) { expandedGroupKey = null; renderMarkers(); } };
 }
 
-function getNadeImg(type) { return { smoke:'Smoke2.png', flash:'Flashbang.png', molly:'Molotov.png', he:'HEgrenade.png' }[type] || 'Smoke2.png'; }
+function getNadeImg(type) { return { smoke:'images/source/Smoke2.png', flash:'images/source/Flashbang.png', molly:'images/source/Molotov.png', he:'images/source/HEgrenade.png' }[type] || 'images/source/Smoke2.png'; }
 
 function showHoverPreview(e, lineup, marker) {
   hideHoverPreview();
@@ -1407,6 +1425,7 @@ function pickCoords(e) {
   if (adminClickState === 'land') {
     adminPickedLX = x; adminPickedLY = y;
     placeCrosshair('coordLandCrosshair', x, y, '16px', 'var(--accent)', 'rgba(232,160,32,0.2)', false);
+    drawPickerLine();
     adminClickState = adminBounce ? 'bounce0' : 'throw';
 
   } else if (adminClickState.startsWith('bounce')) {
@@ -1447,7 +1466,6 @@ function updateAdminCoordHint() {
 }
 
 function drawPickerLine() {
-  if (adminPickedX == null || adminPickedLX == null) return;
   let svg = document.getElementById('pickerLine');
   if (!svg) {
     svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
@@ -1455,11 +1473,24 @@ function drawPickerLine() {
     svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;';
     document.getElementById('coordPicker').appendChild(svg);
   }
-  // build point string: throw → bounces → land
-  const pts = [adminPickedX + '% ' + adminPickedY + '%'];
-  adminBouncePoints.forEach(b => pts.push(b.x + '% ' + b.y + '%'));
-  pts.push(adminPickedLX + '% ' + adminPickedLY + '%');
-  svg.innerHTML = '<polyline points="' + pts.join(', ') + '" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-dasharray="5,4"/>';
+  svg.innerHTML = '';
+
+  // build all known points in order: throw → bounces (so far) → land (if set)
+  const pts = [];
+  if (adminPickedX != null) pts.push([adminPickedX, adminPickedY]);
+  adminBouncePoints.forEach(b => pts.push([b.x, b.y]));
+  if (adminPickedLX != null) pts.push([adminPickedLX, adminPickedLY]);
+
+  // need at least 2 points to draw a line
+  for (let i = 0; i < pts.length - 1; i++) {
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', pts[i][0] + '%'); line.setAttribute('y1', pts[i][1] + '%');
+    line.setAttribute('x2', pts[i+1][0] + '%'); line.setAttribute('y2', pts[i+1][1] + '%');
+    line.setAttribute('stroke', 'rgba(255,255,255,0.5)');
+    line.setAttribute('stroke-width', '1.5');
+    line.setAttribute('stroke-dasharray', '5,4');
+    svg.appendChild(line);
+  }
 }
 
 async function saveLineup() {
