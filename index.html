@@ -69,7 +69,7 @@
   .map-area { flex:1; position:relative; overflow:hidden; background:#080a0d; display:flex; align-items:center; justify-content:center; }
   .map-placeholder { position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
   .map-image-container { position:relative; display:inline-block; }
-  .map-image { display:block; max-width:calc(100vw - 220px); max-height:calc(100vh - 52px - 44px); width:auto; height:auto; min-width:min(calc(100vw - 220px), calc((100vh - 96px))); opacity:0.9; user-select:none; -webkit-user-drag:none; }
+  .map-image { display:block; max-width:100%; max-height:100%; width:auto; height:100%; opacity:0.9; user-select:none; -webkit-user-drag:none; }
   .map-overlay { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
 
   /* DOTTED LINE between throw and land */
@@ -638,9 +638,9 @@ function renderMarkers() {
     // dotted line - hidden by default, shown on hover
     if (hasLand) {
       const line = document.createElementNS('http://www.w3.org/2000/svg','line');
-      line.setAttribute('x1', l.lx + '%'); line.setAttribute('y1', l.ly + '%');
-      line.setAttribute('x2', l.x + '%'); line.setAttribute('y2', l.y + '%');
-      line.setAttribute('stroke', isDimmed ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.5)');
+      line.setAttribute('x1', l.x + '%'); line.setAttribute('y1', l.y + '%');
+      line.setAttribute('x2', l.lx + '%'); line.setAttribute('y2', l.ly + '%');
+      line.setAttribute('stroke', 'rgba(255,255,255,0.5)');
       line.setAttribute('stroke-width', '1.5');
       line.setAttribute('stroke-dasharray', '5,4');
       line.setAttribute('opacity', '0');
@@ -648,12 +648,14 @@ function renderMarkers() {
       svg.appendChild(line);
     }
 
-    // LAND MARKER (big colored icon) - always visible, clickable
-    // land position = l.x / l.y (first click in old data = where nade lands)
+    // LAND MARKER (big colored icon) - at lx,ly (where nade lands)
+    // If no land position recorded (old data), fall back to x,y
+    const landX = hasLand ? l.lx : l.x;
+    const landY = hasLand ? l.ly : l.y;
     const landMarker = document.createElement('div');
     landMarker.className = 'marker ' + l.type + (isDimmed ? ' dimmed' : '');
-    landMarker.style.left = l.x + '%';
-    landMarker.style.top = l.y + '%';
+    landMarker.style.left = landX + '%';
+    landMarker.style.top = landY + '%';
     landMarker.innerHTML = '<div class="marker-inner"><img src="images/' + getNadeImg(l.type) + '" width="9" height="9" style="object-fit:contain;filter:brightness(1.3)"></div>';
 
     landMarker.onclick = (e) => {
@@ -662,12 +664,12 @@ function renderMarkers() {
       else { focusedLineupId = l.id; renderMarkers(); openLineupModal(l); }
     };
 
-    // THROW MARKER (small white circle) - hidden by default, shows on hover
+    // THROW MARKER (small white circle) - at x,y (where you stand) - hover only
     if (hasLand) {
       const throwMarker = document.createElement('div');
       throwMarker.className = 'marker-throw' + (isDimmed ? ' dimmed' : '');
-      throwMarker.style.left = l.lx + '%';
-      throwMarker.style.top = l.ly + '%';
+      throwMarker.style.left = l.x + '%';
+      throwMarker.style.top = l.y + '%';
       throwMarker.innerHTML = '<div class="marker-land-inner"></div>';
       throwMarker.id = 'throw-' + l.id;
       overlay.appendChild(throwMarker);
