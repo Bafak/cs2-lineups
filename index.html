@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NADE VAULT</title>
-<link rel="icon" type="image/png" href="images/source/redicon.png">
+<link rel="icon" type="image/jpeg" href="images/source/redicon.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
@@ -189,11 +189,11 @@
   .gallery-counter { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); font-family:var(--font-mono); font-size:11px; color:rgba(255,255,255,0.6); letter-spacing:1px; background:rgba(0,0,0,0.5); padding:2px 8px; z-index:10; pointer-events:none; }
   .gallery-btns { display:none; }
   .gallery-dots { display:flex; gap:6px; justify-content:center; margin-bottom:8px; flex-wrap:wrap; }
-  .gallery-arrow { position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.45); border:none; color:rgba(255,255,255,0.7); width:36px; height:36px; cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; z-index:10; transition:all 0.15s; border-radius:2px; }
-  .gallery-arrow:hover { background:rgba(0,0,0,0.75); color:#fff; }
+  .gallery-arrow { position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.5); border:none; color:rgba(255,255,255,0.85); width:44px; height:64px; cursor:pointer; font-size:28px; display:flex; align-items:center; justify-content:center; z-index:10; transition:all 0.15s; border-radius:3px; }
+  .gallery-arrow:hover { background:rgba(0,0,0,0.8); color:#fff; }
   .gallery-arrow:disabled { opacity:0; pointer-events:none; }
-  .gallery-arrow.prev { left:8px; }
-  .gallery-arrow.next { right:8px; }
+  .gallery-arrow.prev { left:0; }
+  .gallery-arrow.next { right:0; }
   .gallery-dot { width:8px; height:8px; border-radius:50%; background:var(--border2); cursor:pointer; transition:background 0.12s; border:none; padding:0; }
   .gallery-dot.active { background:var(--accent); }
 
@@ -274,7 +274,7 @@
 <body>
 
 <header>
-  <div class="logo">NADE VAULT <span>// CS2</span></div>
+  <div class="logo">NADE VAULT <span>// CS2 v1.22</span></div>
   <div class="header-right">
     <span class="save-status" id="saveStatus"></span>
     <button class="btn-admin" onclick="openAdmin()">+ ADD LINEUP</button>
