@@ -545,8 +545,6 @@
             <option value="t">T</option>
             <option value="ct">CT</option>
           </select>
-            <option value="ct">CT</option>
-          </select>
         </div>
         <div class="form-group">
           <label class="form-label">STAGE</label>
@@ -1211,13 +1209,13 @@ function populateModalView(lineup) {
 
 function renderGalleryImage() {
   const mediaEl = document.getElementById('modalMedia');
-  // preserve arrow buttons and counter - only update the img
   let img = mediaEl.querySelector('img.gallery-img');
   if (!img) {
     img = document.createElement('img');
     img.className = 'gallery-img';
-    img.style.cssText = 'width:100%;height:100%;object-fit:contain;';
-    mediaEl.appendChild(img);
+    img.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;';
+    // insert as first child so arrows stay on top
+    mediaEl.insertBefore(img, mediaEl.firstChild);
   }
   img.src = galleryImages[galleryIndex];
   img.alt = 'step ' + (galleryIndex+1);
@@ -1225,9 +1223,10 @@ function renderGalleryImage() {
   const prev = document.getElementById('galleryPrev');
   const next = document.getElementById('galleryNext');
   const counter = document.getElementById('galleryCounter');
-  if (prev) { prev.style.display = galleryImages.length > 1 ? 'flex' : 'none'; prev.disabled = galleryIndex === 0; }
-  if (next) { next.style.display = galleryImages.length > 1 ? 'flex' : 'none'; next.disabled = galleryIndex === galleryImages.length - 1; }
-  if (counter) { counter.style.display = galleryImages.length > 1 ? 'block' : 'none'; counter.textContent = (galleryIndex+1) + ' / ' + galleryImages.length; }
+  const show = galleryImages.length > 1;
+  if (prev) { prev.style.display = show ? 'flex' : 'none'; prev.disabled = galleryIndex === 0; }
+  if (next) { next.style.display = show ? 'flex' : 'none'; next.disabled = galleryIndex === galleryImages.length - 1; }
+  if (counter) { counter.style.display = show ? 'block' : 'none'; counter.textContent = (galleryIndex+1) + ' / ' + galleryImages.length; }
   renderGalleryDots();
 }
 
