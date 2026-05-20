@@ -80,11 +80,17 @@
   /* DOTTED LINE between throw and land */
   .lineup-line { position:absolute; pointer-events:none; z-index:5; }
 
-  /* THROW MARKER - hidden by default, shows on land marker hover */
+  /* THROW MARKER - hidden by default, shows when group expanded */
   .marker-throw { position:absolute; transform:translate(-50%,-50%); pointer-events:none; z-index:9; opacity:0; transition:opacity 0.15s; }
   .marker-throw.visible { opacity:1; }
+  .marker-throw.clickable { pointer-events:all; cursor:pointer; }
+  .marker-throw.clickable:hover { transform:translate(-50%,-50%) scale(1.3); filter:brightness(1.3); }
   .marker-throw.dimmed { opacity:0 !important; }
   .marker-land-inner { width:18px; height:18px; border-radius:50%; border:2px solid #fff; background:rgba(255,255,255,0.4); box-shadow:0 0 8px rgba(0,0,0,0.8), 0 0 0 1px rgba(0,0,0,0.5); }
+
+  /* EXPANDED land marker - active state */
+  .marker.expanded { z-index:25; }
+  .marker.expanded .marker-inner { box-shadow:0 0 0 3px var(--accent), 0 0 16px rgba(232,160,32,0.6), 0 0 10px rgba(0,0,0,0.6); }
 
   /* DIMMED state - when one lineup is focused */
   .marker.dimmed { opacity:0.15; pointer-events:none; }
@@ -646,7 +652,24 @@ function toggleMultiNade() {
 }
 
 let focusedLineupId = null;
-let hoverPreviewEl = null;
+let expandedGroupKey = null; // group that's currently expanded
+
+const GROUP_TOLERANCE = 2; // % tolerance for grouping land positions
+
+function groupKey(mapId, lx, ly) {
+  return mapId + ':' + Math.round(lx / GROUP_TOLERANCE) + ':' + Math.round(ly / GROUP_TOLERANCE);
+}
+
+function findExistingGroupLand(mapId, lx, ly) {
+  // returns existing {lx, ly} if within tolerance, otherwise null
+  for (const l of lineups) {
+    if (l.map !== mapId || l.lx == null) continue;
+    if (Math.abs(l.lx - lx) <= GROUP_TOLERANCE && Math.abs(l.ly - ly) <= GROUP_TOLERANCE) {
+      return { lx: l.lx, ly: l.ly };
+    }
+  }
+  return null;
+}
 
 function renderMarkers() {
   const overlay = document.getElementById('markerOverlay');
@@ -663,69 +686,76 @@ function renderMarkers() {
   svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:4;overflow:visible;';
   container.insertBefore(svg, overlay);
 
+  // group lineups by land position
+  const groups = {};
   visible.forEach(l => {
-    const isFocused = focusedLineupId === l.id;
-    const isDimmed = focusedLineupId && !isFocused;
-
     const hasLand = l.lx != null && l.ly != null;
+    const lx = hasLand ? l.lx : l.x;
+    const ly = hasLand ? l.ly : l.y;
+    const key = groupKey(l.map, lx, ly);
+    if (!groups[key]) groups[key] = { lx, ly, type: l.type, lineups: [] };
+    groups[key].lineups.push(l);
+  });
 
-    // dotted line - hidden by default, shown on hover
-    if (hasLand) {
-      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
-      line.setAttribute('x1', l.x + '%'); line.setAttribute('y1', l.y + '%');
-      line.setAttribute('x2', l.lx + '%'); line.setAttribute('y2', l.ly + '%');
-      line.setAttribute('stroke', 'rgba(255,255,255,0.5)');
-      line.setAttribute('stroke-width', '1.5');
-      line.setAttribute('stroke-dasharray', '5,4');
-      line.setAttribute('opacity', '0');
-      line.id = 'line-' + l.id;
-      svg.appendChild(line);
-    }
+  Object.entries(groups).forEach(([key, group]) => {
+    const isExpanded = expandedGroupKey === key;
+    const isDimmed = expandedGroupKey && !isExpanded;
 
-    // LAND MARKER (big colored icon) - at lx,ly (where nade lands)
-    // If no land position recorded (old data), fall back to x,y
-    const landX = hasLand ? l.lx : l.x;
-    const landY = hasLand ? l.ly : l.y;
+    // dominant type = most common type in group, or first
+    const typeCount = {};
+    group.lineups.forEach(l => { typeCount[l.type] = (typeCount[l.type] || 0) + 1; });
+    const dominantType = Object.entries(typeCount).sort((a,b) => b[1]-a[1])[0][0];
+
+    // LAND MARKER for the group
     const landMarker = document.createElement('div');
-    landMarker.className = 'marker ' + l.type + (isDimmed ? ' dimmed' : '');
-    landMarker.style.left = landX + '%';
-    landMarker.style.top = landY + '%';
-    landMarker.innerHTML = '<div class="marker-inner"><img src="images/' + getNadeImg(l.type) + '" width="9" height="9" style="object-fit:contain;filter:brightness(1.3)"></div>';
+    landMarker.className = 'marker ' + dominantType + (isDimmed ? ' dimmed' : '') + (isExpanded ? ' expanded' : '');
+    landMarker.style.left = group.lx + '%';
+    landMarker.style.top = group.ly + '%';
+    landMarker.innerHTML = '<div class="marker-inner"><img src="images/' + getNadeImg(dominantType) + '" width="9" height="9" style="object-fit:contain;filter:brightness(1.3)"></div>';
 
     landMarker.onclick = (e) => {
       e.stopPropagation();
-      if (focusedLineupId === l.id) { focusedLineupId = null; renderMarkers(); }
-      else { focusedLineupId = l.id; renderMarkers(); openLineupModal(l); }
+      if (expandedGroupKey === key) {
+        expandedGroupKey = null;
+      } else {
+        expandedGroupKey = key;
+      }
+      renderMarkers();
     };
+    overlay.appendChild(landMarker);
 
-    // THROW MARKER (small white circle) - at x,y (where you stand) - hover only
-    if (hasLand) {
-      const throwMarker = document.createElement('div');
-      throwMarker.className = 'marker-throw' + (isDimmed ? ' dimmed' : '');
-      throwMarker.style.left = l.x + '%';
-      throwMarker.style.top = l.y + '%';
-      throwMarker.innerHTML = '<div class="marker-land-inner"></div>';
-      throwMarker.id = 'throw-' + l.id;
-      overlay.appendChild(throwMarker);
+    // If expanded, draw throw markers + dotted lines for each lineup in group
+    if (isExpanded) {
+      group.lineups.forEach(l => {
+        if (l.lx == null) return; // skip lineups without throw/land structure
 
-      landMarker.addEventListener('mouseenter', () => {
-        const t = document.getElementById('throw-' + l.id);
-        if (t) t.classList.add('visible');
-        const ln = document.getElementById('line-' + l.id);
-        if (ln) ln.setAttribute('opacity', '1');
-      });
-      landMarker.addEventListener('mouseleave', () => {
-        const t = document.getElementById('throw-' + l.id);
-        if (t) t.classList.remove('visible');
-        const ln = document.getElementById('line-' + l.id);
-        if (ln) ln.setAttribute('opacity', '0');
+        // dotted line
+        const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+        line.setAttribute('x1', l.x + '%'); line.setAttribute('y1', l.y + '%');
+        line.setAttribute('x2', group.lx + '%'); line.setAttribute('y2', group.ly + '%');
+        line.setAttribute('stroke', 'rgba(255,255,255,0.5)');
+        line.setAttribute('stroke-width', '1.5');
+        line.setAttribute('stroke-dasharray', '5,4');
+        svg.appendChild(line);
+
+        // throw marker - clickable, opens modal
+        const throwMarker = document.createElement('div');
+        throwMarker.className = 'marker-throw visible clickable';
+        throwMarker.style.left = l.x + '%';
+        throwMarker.style.top = l.y + '%';
+        throwMarker.innerHTML = '<div class="marker-land-inner"></div>';
+        throwMarker.title = l.name;
+        throwMarker.onclick = (e) => {
+          e.stopPropagation();
+          openLineupModal(l);
+        };
+        overlay.appendChild(throwMarker);
       });
     }
-
-    overlay.appendChild(landMarker);
   });
 
-  overlay.onclick = () => { if (focusedLineupId) { focusedLineupId = null; renderMarkers(); } };
+  // click on map background = collapse expanded group
+  overlay.onclick = () => { if (expandedGroupKey) { expandedGroupKey = null; renderMarkers(); } };
 }
 
 function getNadeImg(type) { return { smoke:'Smoke2.png', flash:'Flashbang.png', molly:'Molotov.png', he:'HEgrenade.png' }[type] || 'Smoke2.png'; }
@@ -1110,7 +1140,16 @@ function saveLineup() {
     images = [...document.getElementById('adminImageUrlList').querySelectorAll('input')].map(i => i.value.trim()).filter(v => v);
     if (!images.length) { alert('Add at least one image URL, or switch to Video.'); return; }
   }
-  lineups.push({ id:'l'+Date.now(), map:mapId, type, name, segment:seg, stage, mediaType, video, images, x:adminPickedX, y:adminPickedY, lx:adminPickedLX, ly:adminPickedLY, notes });
+
+  // Check if there's an existing land position nearby - offer to group
+  let finalLx = adminPickedLX, finalLy = adminPickedLY;
+  const existing = findExistingGroupLand(mapId, adminPickedLX, adminPickedLY);
+  if (existing) {
+    const join = confirm('There is an existing land position nearby. Add this lineup to the existing group at this location?');
+    if (join) { finalLx = existing.lx; finalLy = existing.ly; }
+  }
+
+  lineups.push({ id:'l'+Date.now(), map:mapId, type, name, segment:seg, stage, mediaType, video, images, x:adminPickedX, y:adminPickedY, lx:finalLx, ly:finalLy, notes });
   saveData();
   document.getElementById('adminMap').value = '';
   document.getElementById('adminName').value = '';
