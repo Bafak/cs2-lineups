@@ -75,9 +75,10 @@
   /* DOTTED LINE between throw and land */
   .lineup-line { position:absolute; pointer-events:none; z-index:5; }
 
-  /* LAND MARKER */
-  .marker-land { position:absolute; transform:translate(-50%,-50%); pointer-events:none; z-index:9; }
-  .marker-land-inner { width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,0.5); background:rgba(255,255,255,0.15); box-shadow:0 0 6px rgba(0,0,0,0.6); }
+  /* THROW MARKER - hidden by default, shows on land marker hover */
+  .marker-throw { position:absolute; transform:translate(-50%,-50%); pointer-events:none; z-index:9; opacity:0; transition:opacity 0.15s; }
+  .marker-throw.visible { opacity:1; }
+  .marker-throw.dimmed { opacity:0 !important; }
 
   /* DIMMED state - when one lineup is focused */
   .marker.dimmed { opacity:0.15; pointer-events:none; }
@@ -129,7 +130,8 @@
   .badge.seg { color:var(--text-dim); border-color:var(--border2); }
 
   /* STAGE SWITCHER */
-  .stage-switch-btn { flex:1; padding:3px 0; text-align:center; font-family:var(--font-mono); font-size:10px; letter-spacing:1px; text-transform:uppercase; border:1px solid var(--border2); cursor:pointer; color:var(--text-dim); background:var(--surface2); transition:all 0.12s; }
+  .stage-switcher { display:flex; gap:4px; flex-shrink:0; }
+  .stage-switch-btn { min-width:60px; padding:3px 10px; text-align:center; font-family:var(--font-mono); font-size:10px; letter-spacing:1px; text-transform:uppercase; border:1px solid var(--border2); cursor:pointer; color:var(--text-dim); background:var(--surface2); transition:all 0.12s; white-space:nowrap; }
   .stage-switch-btn:hover { border-color:var(--text-dim); color:var(--text); }
   .stage-switch-btn.active-new { color:#60c060; border-color:#60c060; background:rgba(96,192,96,0.1); }
   .stage-switch-btn.active-refresh { color:#e8a020; border-color:#e8a020; background:rgba(232,160,32,0.1); }
@@ -619,7 +621,6 @@ function renderMarkers() {
 
   const visible = lineups.filter(l => l.map === selectedMap && activeNadeTypes.has(l.type) && activeSegments.has(l.segment) && activeStages.has(l.stage || 'new'));
 
-  // draw SVG lines first (behind markers)
   const container = document.getElementById('mapImageContainer');
   let svg = container.querySelector('.lines-svg');
   if (!svg) {
@@ -634,52 +635,57 @@ function renderMarkers() {
     const isFocused = focusedLineupId === l.id;
     const isDimmed = focusedLineupId && !isFocused;
 
-    // dotted line if land position exists
-    if (l.lx != null && l.ly != null) {
+    const hasLand = l.lx != null && l.ly != null;
+
+    // dotted line (throw -> land)
+    if (hasLand) {
       const line = document.createElementNS('http://www.w3.org/2000/svg','line');
-      line.setAttribute('x1', l.x + '%'); line.setAttribute('y1', l.y + '%');
-      line.setAttribute('x2', l.lx + '%'); line.setAttribute('y2', l.ly + '%');
+      // throw = l.lx/l.ly, land = l.x/l.y (swapped from old logic)
+      line.setAttribute('x1', l.lx + '%'); line.setAttribute('y1', l.ly + '%');
+      line.setAttribute('x2', l.x + '%'); line.setAttribute('y2', l.y + '%');
       line.setAttribute('stroke', isDimmed ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.35)');
       line.setAttribute('stroke-width', '1.5');
       line.setAttribute('stroke-dasharray', '5,4');
       svg.appendChild(line);
-
-      // land marker
-      const land = document.createElement('div');
-      land.className = 'marker-land' + (isDimmed ? ' dimmed' : '');
-      land.style.left = l.lx + '%'; land.style.top = l.ly + '%';
-      land.innerHTML = '<div class="marker-land-inner"></div>';
-      overlay.appendChild(land);
     }
 
-    // throw marker
-    const marker = document.createElement('div');
-    marker.className = 'marker ' + l.type + (isDimmed ? ' dimmed' : '');
-    marker.style.left = l.x + '%'; marker.style.top = l.y + '%';
-    marker.innerHTML = '<div class="marker-inner"><img src="images/' + getNadeImg(l.type) + '" width="9" height="9" style="object-fit:contain;filter:brightness(1.3)"></div>';
-    marker.title = l.name;
+    // LAND MARKER (big colored icon) - always visible, clickable
+    // land position = l.x / l.y (first click in old data = where nade lands)
+    const landMarker = document.createElement('div');
+    landMarker.className = 'marker ' + l.type + (isDimmed ? ' dimmed' : '');
+    landMarker.style.left = l.x + '%';
+    landMarker.style.top = l.y + '%';
+    landMarker.innerHTML = '<div class="marker-inner"><img src="images/' + getNadeImg(l.type) + '" width="9" height="9" style="object-fit:contain;filter:brightness(1.3)"></div>';
 
-    // click - focus/unfocus
-    marker.onclick = (e) => {
+    landMarker.onclick = (e) => {
       e.stopPropagation();
-      if (focusedLineupId === l.id) {
-        focusedLineupId = null;
-        renderMarkers();
-      } else {
-        focusedLineupId = l.id;
-        renderMarkers();
-        openLineupModal(l);
-      }
+      if (focusedLineupId === l.id) { focusedLineupId = null; renderMarkers(); }
+      else { focusedLineupId = l.id; renderMarkers(); openLineupModal(l); }
     };
 
-    // hover preview
-    marker.addEventListener('mouseenter', (e) => showHoverPreview(e, l, marker));
-    marker.addEventListener('mouseleave', hideHoverPreview);
+    // THROW MARKER (small white circle) - hidden by default, shows on hover
+    if (hasLand) {
+      const throwMarker = document.createElement('div');
+      throwMarker.className = 'marker-throw' + (isDimmed ? ' dimmed' : '');
+      throwMarker.style.left = l.lx + '%';
+      throwMarker.style.top = l.ly + '%';
+      throwMarker.innerHTML = '<div class="marker-land-inner"></div>';
+      throwMarker.id = 'throw-' + l.id;
+      overlay.appendChild(throwMarker);
 
-    overlay.appendChild(marker);
+      landMarker.addEventListener('mouseenter', () => {
+        const t = document.getElementById('throw-' + l.id);
+        if (t) t.classList.add('visible');
+      });
+      landMarker.addEventListener('mouseleave', () => {
+        const t = document.getElementById('throw-' + l.id);
+        if (t) t.classList.remove('visible');
+      });
+    }
+
+    overlay.appendChild(landMarker);
   });
 
-  // click on map background = unfocus
   overlay.onclick = () => { if (focusedLineupId) { focusedLineupId = null; renderMarkers(); } };
 }
 
