@@ -58,11 +58,11 @@
   .nade-filters { display:flex; flex-direction:column; gap:2px; }
   .nade-btn { background:transparent; border:none; color:var(--text-dim); padding:7px 10px; font-family:var(--font-main); font-size:14px; font-weight:600; cursor:pointer; text-align:left; border-left:2px solid transparent; transition:all 0.12s; display:flex; align-items:center; gap:10px; }
   .nade-btn:hover { color:var(--text); background:var(--surface2); }
-  .nade-btn.active { background:var(--surface2); }
-  .nade-btn.active.smoke { color:var(--smoke); border-left-color:var(--smoke); }
-  .nade-btn.active.flash { color:var(--flash); border-left-color:var(--flash); }
-  .nade-btn.active.molly { color:var(--molly); border-left-color:var(--molly); }
-  .nade-btn.active.he { color:var(--he); border-left-color:var(--he); }
+  .nade-btn.active { background:var(--surface2); border-left-width:3px; }
+  .nade-btn.active.smoke { color:var(--smoke); border-left-color:var(--smoke); background:rgba(74,158,221,0.12); }
+  .nade-btn.active.flash { color:var(--flash); border-left-color:var(--flash); background:rgba(240,224,64,0.1); }
+  .nade-btn.active.molly { color:var(--molly); border-left-color:var(--molly); background:rgba(232,64,48,0.12); }
+  .nade-btn.active.he { color:var(--he); border-left-color:var(--he); background:rgba(96,192,96,0.12); }
   .nade-icon { width:20px; height:20px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 
   .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
@@ -204,6 +204,15 @@
   .btn-remove-img:hover { border-color:var(--molly); color:var(--molly); }
   .btn-add-img { background:transparent; border:1px dashed var(--border2); color:var(--text-dim); padding:6px 12px; font-family:var(--font-mono); font-size:11px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; width:100%; transition:all 0.12s; margin-top:4px; }
   .btn-add-img:hover { border-color:var(--accent); color:var(--accent); }
+
+  .bounce-toggle { background:transparent; border:1px solid var(--border2); color:var(--text-dim); padding:7px 14px; font-family:var(--font-mono); font-size:11px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; width:100%; text-align:left; transition:all 0.12s; display:flex; align-items:center; gap:8px; }
+  .bounce-toggle:hover { border-color:var(--text-dim); color:var(--text); }
+  .bounce-toggle.active { color:var(--accent); border-color:var(--accent); background:rgba(232,160,32,0.08); }
+  .bounce-toggle-icon { font-size:14px; }
+
+  /* BOUNCE MARKER on map */
+  .marker-bounce { position:absolute; transform:translate(-50%,-50%) rotate(45deg); pointer-events:none; z-index:8; }
+  .marker-bounce-inner { width:12px; height:12px; border:2px solid rgba(255,255,255,0.7); background:rgba(255,255,255,0.2); box-shadow:0 0 6px rgba(0,0,0,0.6); }
 
   .coord-picker-area { position:relative; width:100%; max-width:600px; margin:4px auto 0; background:#000; border:1px solid var(--border2); cursor:crosshair; overflow:hidden; }
   .coord-picker-area img { width:100%; display:block; opacity:0.8; pointer-events:none; user-select:none; }
@@ -354,6 +363,7 @@
                 <option value="ancient">Ancient</option>
                 <option value="anubis">Anubis</option>
                 <option value="cache">Cache</option>
+                <option value="dust2">Dust2</option>
               </select>
             </div>
             <div class="form-group">
@@ -377,6 +387,7 @@
                 <option value="execute">Execute</option>
                 <option value="retake">Retake</option>
                 <option value="instant_smokes">Instant smokes</option>
+                <option value="standard">Standard</option>
               </select>
             </div>
             <div class="form-group">
@@ -409,9 +420,14 @@
             <textarea class="form-textarea" id="editNotes"></textarea>
           </div>
           <div class="form-group">
-            <label class="form-label">POSITION ON MAP - 1st click = LAND, 2nd click = THROW</label>
+            <button class="bounce-toggle" id="editBounceToggle" onclick="toggleEditBounce()">
+              <span class="bounce-toggle-icon">◇</span> BOUNCES OFF WALL
+            </button>
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="editPickerLabel">POSITION ON MAP - 1st click = LAND, 2nd click = THROW</label>
             <div id="editMapPickerWrap"></div>
-            <div class="coord-hint">LAND: <span id="editCoordLX">-</span>,<span id="editCoordLY">-</span> &nbsp;|&nbsp; THROW: <span id="editCoordX">-</span>,<span id="editCoordY">-</span></div>
+            <div class="coord-hint">LAND: <span id="editCoordLX">-</span>,<span id="editCoordLY">-</span> &nbsp;|&nbsp; THROW: <span id="editCoordX">-</span>,<span id="editCoordY">-</span> &nbsp;|&nbsp; BOUNCE: <span id="editCoordBX">-</span>,<span id="editCoordBY">-</span></div>
           </div>
           <div class="edit-footer">
             <button class="btn-secondary" onclick="cancelEdit()">CANCEL</button>
@@ -442,6 +458,7 @@
             <option value="ancient">Ancient</option>
             <option value="anubis">Anubis</option>
             <option value="cache">Cache</option>
+            <option value="dust2">Dust2</option>
           </select>
         </div>
         <div class="form-group">
@@ -465,6 +482,7 @@
             <option value="execute">Execute</option>
             <option value="retake">Retake</option>
             <option value="instant_smokes">Instant smokes</option>
+            <option value="standard">Standard</option>
           </select>
         </div>
         <div class="form-group">
@@ -502,9 +520,14 @@
         <textarea class="form-textarea" id="adminNotes" placeholder="Description, timing, where to stand..."></textarea>
       </div>
       <div class="form-group">
-        <label class="form-label">POSITION ON MAP - 1st click = LAND, 2nd click = THROW</label>
+        <button class="bounce-toggle" id="adminBounceToggle" onclick="toggleAdminBounce()">
+          <span class="bounce-toggle-icon">◇</span> BOUNCES OFF WALL
+        </button>
+      </div>
+      <div class="form-group">
+        <label class="form-label" id="adminPickerLabel">POSITION ON MAP - 1st click = LAND, 2nd click = THROW</label>
         <div id="adminMapPickerWrap"><div class="map-select-hint">Select a map first</div></div>
-        <div class="coord-hint">LAND: <span id="coordLX">-</span>,<span id="coordLY">-</span> &nbsp;|&nbsp; THROW: <span id="coordX">-</span>,<span id="coordY">-</span></div>
+        <div class="coord-hint">LAND: <span id="coordLX">-</span>,<span id="coordLY">-</span> &nbsp;|&nbsp; THROW: <span id="coordX">-</span>,<span id="coordY">-</span> &nbsp;|&nbsp; BOUNCE: <span id="coordBX">-</span>,<span id="coordBY">-</span></div>
       </div>
     </div>
     <div class="admin-footer">
@@ -519,6 +542,7 @@ const MAPS = [
   { id:'mirage', label:'Mirage' }, { id:'inferno', label:'Inferno' },
   { id:'nuke', label:'Nuke' }, { id:'ancient', label:'Ancient' },
   { id:'anubis', label:'Anubis' }, { id:'cache', label:'Cache' },
+  { id:'dust2', label:'Dust2' },
 ];
 const FTM_MAPS = ['dust2'];
 const MAP_RADAR_IMGS = {
@@ -529,16 +553,16 @@ const MAP_RADAR_IMGS = {
   anubis:'https://raw.githubusercontent.com/MurkyYT/cs2-map-icons/main/images/radars/de_anubis_radar_psd.png',
   cache:'https://raw.githubusercontent.com/MurkyYT/cs2-map-icons/main/images/radars/de_cache_radar_psd.png',
 };
-const SEGMENTS = ['execute','retake','instant_smokes'];
-const SEG_LABELS = { execute:'Execute', retake:'Retake', instant_smokes:'Instant smokes' };
+const SEGMENTS = ['execute','retake','instant_smokes','standard'];
+const SEG_LABELS = { execute:'Execute', retake:'Retake', instant_smokes:'Instant smokes', standard:'Standard' };
 const STAGES = ['new','refresh','learnt'];
 const STAGE_LABELS = { new:'New', refresh:'Refresh', learnt:'Learnt' };
 
 function migrateLineups(data) {
-  return data.filter(l => SEGMENTS.includes(l.segment)).map(l => {
+  return data.filter(l => SEGMENTS.includes(l.segment) || l.segment == null).map(l => {
+    if (!l.segment || !SEGMENTS.includes(l.segment)) l.segment = 'standard';
     if (!STAGES.includes(l.stage)) l.stage = 'new';
     if (!l.mediaType) { l.mediaType = 'video'; l.video = l.media || ''; l.images = []; delete l.media; }
-    // lx/ly optional - old lineups without land position still work
     return l;
   });
 }
@@ -549,13 +573,48 @@ let activeNadeTypes = new Set(['smoke']);
 let multiNadeMode = false;
 let activeSegments = new Set([...SEGMENTS]);
 let activeStages = new Set([...STAGES]);
-let adminPickedX = null, adminPickedY = null, adminPickedLX = null, adminPickedLY = null;
+let adminPickedX = null, adminPickedY = null, adminPickedLX = null, adminPickedLY = null, adminPickedBX = null, adminPickedBY = null;
+let adminBounce = false;
+
+function toggleAdminBounce() {
+  adminBounce = !adminBounce;
+  const btn = document.getElementById('adminBounceToggle');
+  btn.classList.toggle('active', adminBounce);
+  btn.querySelector('.bounce-toggle-icon').textContent = adminBounce ? '◆' : '◇';
+  const label = document.getElementById('adminPickerLabel');
+  if (adminBounce) {
+    label.textContent = 'POSITION ON MAP - 1st = LAND, 2nd = THROW, 3rd = BOUNCE';
+  } else {
+    label.textContent = 'POSITION ON MAP - 1st click = LAND, 2nd click = THROW';
+    adminPickedBX = null; adminPickedBY = null;
+    document.getElementById('coordBX').textContent = '-';
+    document.getElementById('coordBY').textContent = '-';
+  }
+  updateAdminMapPreview();
+}
 let currentAdminMediaType = 'video';
 let galleryImages = [], galleryIndex = 0;
 let currentModalLineupId = null;
-let editPickedX = null, editPickedY = null, editPickedLX = null, editPickedLY = null;
+let editPickedX = null, editPickedY = null, editPickedLX = null, editPickedLY = null, editPickedBX = null, editPickedBY = null;
 let editClickState = 'land';
+let editBounce = false;
 let currentEditMediaType = 'video';
+
+function toggleEditBounce() {
+  editBounce = !editBounce;
+  const btn = document.getElementById('editBounceToggle');
+  btn.classList.toggle('active', editBounce);
+  btn.querySelector('.bounce-toggle-icon').textContent = editBounce ? '◆' : '◇';
+  const label = document.getElementById('editPickerLabel');
+  if (editBounce) {
+    label.textContent = 'POSITION ON MAP - 1st = LAND, 2nd = THROW, 3rd = BOUNCE';
+  } else {
+    label.textContent = 'POSITION ON MAP - 1st click = LAND, 2nd click = THROW';
+    editPickedBX = null; editPickedBY = null;
+    document.getElementById('editCoordBX').textContent = '-';
+    document.getElementById('editCoordBY').textContent = '-';
+  }
+}
 
 function saveData() { localStorage.setItem('nadeVaultLineups', JSON.stringify(lineups)); }
 
@@ -605,12 +664,12 @@ function renderSegmentList() {
     const btn = document.createElement('button');
     btn.className = 'filter-btn' + (activeSegments.has(seg) ? ' active' : '');
     btn.innerHTML = '<span class="dot"></span>' + SEG_LABELS[seg];
-    btn.onclick = () => { if (activeSegments.has(seg)) { if (activeSegments.size > 1) activeSegments.delete(seg); } else { activeSegments.add(seg); } renderSegmentList(); renderMarkers(); updateTopbar(); };
+    btn.onclick = () => { if (activeSegments.has(seg)) { if (activeSegments.size > 1) activeSegments.delete(seg); } else { activeSegments.add(seg); } expandedGroupKey = null; renderSegmentList(); renderMarkers(); updateTopbar(); };
     el.appendChild(btn);
   });
 }
 
-function toggleSegment(seg) { if (activeSegments.has(seg)) { if (activeSegments.size > 1) activeSegments.delete(seg); } else { activeSegments.add(seg); } renderSegmentList(); renderMarkers(); updateTopbar(); }
+function toggleSegment(seg) { if (activeSegments.has(seg)) { if (activeSegments.size > 1) activeSegments.delete(seg); } else { activeSegments.add(seg); } expandedGroupKey = null; renderSegmentList(); renderMarkers(); updateTopbar(); }
 
 function renderStageList() {
   const el = document.getElementById('stageList'); el.innerHTML = '';
@@ -618,24 +677,20 @@ function renderStageList() {
     const btn = document.createElement('button');
     btn.className = 'filter-btn stage-' + stage + (activeStages.has(stage) ? ' active' : '');
     btn.innerHTML = '<span class="dot"></span>' + STAGE_LABELS[stage];
-    btn.onclick = () => { if (activeStages.has(stage)) { if (activeStages.size > 1) activeStages.delete(stage); } else { activeStages.add(stage); } renderStageList(); renderMarkers(); updateTopbar(); };
+    btn.onclick = () => { if (activeStages.has(stage)) { if (activeStages.size > 1) activeStages.delete(stage); } else { activeStages.add(stage); } expandedGroupKey = null; renderStageList(); renderMarkers(); updateTopbar(); };
     el.appendChild(btn);
   });
 }
 
 function toggleNadeFilter(type) {
   if (multiNadeMode) {
-    // multi mode - toggle on/off, keep at least one
-    if (activeNadeTypes.has(type)) {
-      if (activeNadeTypes.size > 1) activeNadeTypes.delete(type);
-    } else {
-      activeNadeTypes.add(type);
-    }
+    if (activeNadeTypes.has(type)) { if (activeNadeTypes.size > 1) activeNadeTypes.delete(type); }
+    else { activeNadeTypes.add(type); }
   } else {
-    // single mode - only one active at a time
     activeNadeTypes.clear();
     activeNadeTypes.add(type);
   }
+  expandedGroupKey = null;
   document.querySelectorAll('.nade-btn').forEach(btn => btn.classList.toggle('active', activeNadeTypes.has(btn.dataset.type)));
   renderMarkers(); updateTopbar();
 }
@@ -644,13 +699,13 @@ function toggleMultiNade() {
   multiNadeMode = !multiNadeMode;
   document.getElementById('multiNadeToggle').classList.toggle('active', multiNadeMode);
   if (!multiNadeMode && activeNadeTypes.size > 1) {
-    // collapse to first selected
     const first = [...activeNadeTypes][0];
     activeNadeTypes.clear();
     activeNadeTypes.add(first);
     document.querySelectorAll('.nade-btn').forEach(btn => btn.classList.toggle('active', activeNadeTypes.has(btn.dataset.type)));
-    renderMarkers(); updateTopbar();
   }
+  expandedGroupKey = null;
+  renderMarkers(); updateTopbar();
 }
 
 let focusedLineupId = null;
@@ -658,14 +713,13 @@ let expandedGroupKey = null; // group that's currently expanded
 
 const GROUP_TOLERANCE = 2; // % tolerance for grouping land positions
 
-function groupKey(mapId, lx, ly) {
-  return mapId + ':' + Math.round(lx / GROUP_TOLERANCE) + ':' + Math.round(ly / GROUP_TOLERANCE);
+function groupKey(mapId, type, lx, ly) {
+  return mapId + ':' + type + ':' + Math.round(lx / GROUP_TOLERANCE) + ':' + Math.round(ly / GROUP_TOLERANCE);
 }
 
-function findExistingGroupLand(mapId, lx, ly) {
-  // returns existing {lx, ly} if within tolerance, otherwise null
+function findExistingGroupLand(mapId, type, lx, ly) {
   for (const l of lineups) {
-    if (l.map !== mapId || l.lx == null) continue;
+    if (l.map !== mapId || l.lx == null || l.type !== type) continue;
     if (Math.abs(l.lx - lx) <= GROUP_TOLERANCE && Math.abs(l.ly - ly) <= GROUP_TOLERANCE) {
       return { lx: l.lx, ly: l.ly };
     }
@@ -694,7 +748,7 @@ function renderMarkers() {
     const hasLand = l.lx != null && l.ly != null;
     const lx = hasLand ? l.lx : l.x;
     const ly = hasLand ? l.ly : l.y;
-    const key = groupKey(l.map, lx, ly);
+    const key = groupKey(l.map, l.type, lx, ly);
     if (!groups[key]) groups[key] = { lx, ly, type: l.type, lineups: [] };
     groups[key].lineups.push(l);
   });
@@ -726,31 +780,55 @@ function renderMarkers() {
     };
     overlay.appendChild(landMarker);
 
-    // If expanded, draw throw markers + dotted lines for each lineup in group
+    // dotted line - throw → (bounce →) land
     if (isExpanded) {
       group.lineups.forEach(l => {
-        if (l.lx == null) return; // skip lineups without throw/land structure
+        if (l.lx == null) return;
 
-        // dotted line
-        const line = document.createElementNS('http://www.w3.org/2000/svg','line');
-        line.setAttribute('x1', l.x + '%'); line.setAttribute('y1', l.y + '%');
-        line.setAttribute('x2', group.lx + '%'); line.setAttribute('y2', group.ly + '%');
-        line.setAttribute('stroke', 'rgba(255,255,255,0.5)');
-        line.setAttribute('stroke-width', '1.5');
-        line.setAttribute('stroke-dasharray', '5,4');
-        svg.appendChild(line);
+        const hasBounce = l.bx != null && l.by != null;
 
-        // throw marker - clickable, opens modal
+        // line(s)
+        if (hasBounce) {
+          const line1 = document.createElementNS('http://www.w3.org/2000/svg','line');
+          line1.setAttribute('x1', l.x + '%'); line1.setAttribute('y1', l.y + '%');
+          line1.setAttribute('x2', l.bx + '%'); line1.setAttribute('y2', l.by + '%');
+          line1.setAttribute('stroke', 'rgba(255,255,255,0.5)');
+          line1.setAttribute('stroke-width', '1.5');
+          line1.setAttribute('stroke-dasharray', '5,4');
+          svg.appendChild(line1);
+          const line2 = document.createElementNS('http://www.w3.org/2000/svg','line');
+          line2.setAttribute('x1', l.bx + '%'); line2.setAttribute('y1', l.by + '%');
+          line2.setAttribute('x2', group.lx + '%'); line2.setAttribute('y2', group.ly + '%');
+          line2.setAttribute('stroke', 'rgba(255,255,255,0.5)');
+          line2.setAttribute('stroke-width', '1.5');
+          line2.setAttribute('stroke-dasharray', '5,4');
+          svg.appendChild(line2);
+
+          // bounce diamond marker
+          const bounceEl = document.createElement('div');
+          bounceEl.className = 'marker-bounce';
+          bounceEl.style.left = l.bx + '%';
+          bounceEl.style.top = l.by + '%';
+          bounceEl.innerHTML = '<div class="marker-bounce-inner"></div>';
+          overlay.appendChild(bounceEl);
+        } else {
+          const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+          line.setAttribute('x1', l.x + '%'); line.setAttribute('y1', l.y + '%');
+          line.setAttribute('x2', group.lx + '%'); line.setAttribute('y2', group.ly + '%');
+          line.setAttribute('stroke', 'rgba(255,255,255,0.5)');
+          line.setAttribute('stroke-width', '1.5');
+          line.setAttribute('stroke-dasharray', '5,4');
+          svg.appendChild(line);
+        }
+
+        // throw marker - clickable
         const throwMarker = document.createElement('div');
         throwMarker.className = 'marker-throw visible clickable';
         throwMarker.style.left = l.x + '%';
         throwMarker.style.top = l.y + '%';
         throwMarker.innerHTML = '<div class="marker-land-inner"></div>';
         throwMarker.title = l.name;
-        throwMarker.onclick = (e) => {
-          e.stopPropagation();
-          openLineupModal(l);
-        };
+        throwMarker.onclick = (e) => { e.stopPropagation(); openLineupModal(l); };
         overlay.appendChild(throwMarker);
       });
     }
@@ -959,22 +1037,41 @@ function populateEditForm(lineup) {
   editPickedX = lineup.x; editPickedY = lineup.y;
   editPickedLX = lineup.lx != null ? lineup.lx : null;
   editPickedLY = lineup.ly != null ? lineup.ly : null;
-  editClickState = 'throw';
+  editPickedBX = lineup.bx != null ? lineup.bx : null;
+  editPickedBY = lineup.by != null ? lineup.by : null;
+  editClickState = 'land'; // first click = land (same as add)
   const wrap = document.getElementById('editMapPickerWrap');
   const imgUrl = MAP_RADAR_IMGS[lineup.map];
   if (imgUrl) {
+    // throw crosshair (white)
+    let throwCrosshair = '<div class="coord-crosshair" id="editCoordCrosshair" style="display:block;left:' + lineup.x + '%;top:' + lineup.y + '%"></div>';
+    // land crosshair (gold accent)
     let landCrosshair = '';
+    if (editPickedLX != null) {
+      landCrosshair = '<div id="editCoordLandCrosshair" style="position:absolute;transform:translate(-50%,-50%);width:16px;height:16px;border:2px solid var(--accent);border-radius:50%;pointer-events:none;background:rgba(232,160,32,0.2);left:' + editPickedLX + '%;top:' + editPickedLY + '%;"></div>';
+    }
+    // bounce crosshair (white diamond)
+    let bounceCrosshair = '';
+    if (editPickedBX != null) {
+      bounceCrosshair = '<div id="editCoordBounceCrosshair" style="position:absolute;transform:translate(-50%,-50%) rotate(45deg);width:12px;height:12px;border:2px solid rgba(255,255,255,0.8);pointer-events:none;background:rgba(255,255,255,0.2);left:' + editPickedBX + '%;top:' + editPickedBY + '%;"></div>';
+    }
+    // dotted line SVG
     let lineSvg = '';
     if (editPickedLX != null) {
-      landCrosshair = '<div id="editCoordLandCrosshair" style="position:absolute;transform:translate(-50%,-50%);width:14px;height:14px;border:2px solid #fff;border-radius:50%;pointer-events:none;background:rgba(255,255,255,0.2);left:' + editPickedLX + '%;top:' + editPickedLY + '%;"></div>';
-      lineSvg = '<svg id="editPickerLine" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;"><line x1="' + lineup.x + '%" y1="' + lineup.y + '%" x2="' + editPickedLX + '%" y2="' + editPickedLY + '%" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-dasharray="5,4"/></svg>';
+      if (editPickedBX != null) {
+        lineSvg = '<svg id="editPickerLine" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;"><polyline points="' + lineup.x + '% ' + lineup.y + '%, ' + editPickedBX + '% ' + editPickedBY + '%, ' + editPickedLX + '% ' + editPickedLY + '%" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-dasharray="5,4"/></svg>';
+      } else {
+        lineSvg = '<svg id="editPickerLine" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;"><line x1="' + lineup.x + '%" y1="' + lineup.y + '%" x2="' + editPickedLX + '%" y2="' + editPickedLY + '%" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-dasharray="5,4"/></svg>';
+      }
     }
-    wrap.innerHTML = '<div class="coord-picker-area" id="editCoordPicker" onclick="editPickCoords(event)"><img src="' + imgUrl + '" alt="map" draggable="false"><div class="coord-crosshair" id="editCoordCrosshair" style="display:block;left:' + lineup.x + '%;top:' + lineup.y + '%"></div>' + landCrosshair + lineSvg + '</div>';
+    wrap.innerHTML = '<div class="coord-picker-area" id="editCoordPicker" onclick="editPickCoords(event)"><img src="' + imgUrl + '" alt="map" draggable="false">' + throwCrosshair + landCrosshair + bounceCrosshair + lineSvg + '</div>';
   }
-  document.getElementById('editCoordX').textContent = lineup.x + '%';
-  document.getElementById('editCoordY').textContent = lineup.y + '%';
+  document.getElementById('editCoordX').textContent = lineup.x != null ? lineup.x + '%' : '-';
+  document.getElementById('editCoordY').textContent = lineup.y != null ? lineup.y + '%' : '-';
   document.getElementById('editCoordLX').textContent = editPickedLX != null ? editPickedLX + '%' : '-';
   document.getElementById('editCoordLY').textContent = editPickedLY != null ? editPickedLY + '%' : '-';
+  document.getElementById('editCoordBX').textContent = editPickedBX != null ? editPickedBX + '%' : '-';
+  document.getElementById('editCoordBY').textContent = editPickedBY != null ? editPickedBY + '%' : '-';
 }
 
 function switchEditMediaType(type) {
@@ -1013,28 +1110,56 @@ function editPickCoords(e) {
     }
     lch.style.left = x + '%'; lch.style.top = y + '%';
     editClickState = 'throw';
-  } else {
+
+  } else if (editClickState === 'throw') {
     editPickedX = x; editPickedY = y;
     document.getElementById('editCoordX').textContent = x + '%';
     document.getElementById('editCoordY').textContent = y + '%';
     const ch = document.getElementById('editCoordCrosshair');
     if (ch) { ch.style.display = 'block'; ch.style.left = x + '%'; ch.style.top = y + '%'; }
     drawEditPickerLine();
-    editClickState = 'land';
+    editClickState = editBounce ? 'bounce' : 'land';
+
+  } else if (editClickState === 'bounce') {
+    editPickedBX = x; editPickedBY = y;
+    document.getElementById('editCoordBX').textContent = x + '%';
+    document.getElementById('editCoordBY').textContent = y + '%';
+    let bch = document.getElementById('editCoordBounceCrosshair');
+    if (!bch) {
+      bch = document.createElement('div');
+      bch.id = 'editCoordBounceCrosshair';
+      bch.style.cssText = 'position:absolute;transform:translate(-50%,-50%) rotate(45deg);width:12px;height:12px;border:2px solid rgba(255,255,255,0.8);pointer-events:none;background:rgba(255,255,255,0.2);';
+      document.getElementById('editCoordPicker').appendChild(bch);
+    }
+    bch.style.left = x + '%'; bch.style.top = y + '%';
+    drawEditPickerLine();
+    // bounce
+  editBounce = lineup.bx != null;
+  editPickedBX = lineup.bx || null; editPickedBY = lineup.by || null;
+  const editBounceBtn = document.getElementById('editBounceToggle');
+  editBounceBtn.classList.toggle('active', editBounce);
+  editBounceBtn.querySelector('.bounce-toggle-icon').textContent = editBounce ? '◆' : '◇';
+  document.getElementById('editPickerLabel').textContent = editBounce ? 'POSITION ON MAP - 1st = LAND, 2nd = THROW, 3rd = BOUNCE' : 'POSITION ON MAP - 1st click = LAND, 2nd click = THROW';
+  document.getElementById('editCoordBX').textContent = editPickedBX != null ? editPickedBX + '%' : '-';
+  document.getElementById('editCoordBY').textContent = editPickedBY != null ? editPickedBY + '%' : '-';
+  editClickState = 'land';
   }
 }
 
 function drawEditPickerLine() {
   if (editPickedX == null || editPickedLX == null) return;
-  let line = document.getElementById('editPickerLine');
-  if (!line) {
-    const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  let svg = document.getElementById('editPickerLine');
+  if (!svg) {
+    svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
     svg.id = 'editPickerLine';
     svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;';
     document.getElementById('editCoordPicker').appendChild(svg);
-    line = svg;
   }
-  line.innerHTML = '<line x1="' + editPickedX + '%" y1="' + editPickedY + '%" x2="' + editPickedLX + '%" y2="' + editPickedLY + '%" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-dasharray="5,4"/>';
+  if (editPickedBX != null) {
+    svg.innerHTML = '<polyline points="' + editPickedX + '% ' + editPickedY + '%, ' + editPickedBX + '% ' + editPickedBY + '%, ' + editPickedLX + '% ' + editPickedLY + '%" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-dasharray="5,4"/>';
+  } else {
+    svg.innerHTML = '<line x1="' + editPickedX + '%" y1="' + editPickedY + '%" x2="' + editPickedLX + '%" y2="' + editPickedLY + '%" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-dasharray="5,4"/>';
+  }
 }
 
 function saveEdit() {
@@ -1056,6 +1181,8 @@ function saveEdit() {
   }
   if (editPickedX !== null) { lineup.x = editPickedX; lineup.y = editPickedY; }
   if (editPickedLX !== null) { lineup.lx = editPickedLX; lineup.ly = editPickedLY; }
+  if (editPickedBX !== null) { lineup.bx = editPickedBX; lineup.by = editPickedBY; }
+  else if (editPickedBX === null && !editBounce) { lineup.bx = null; lineup.by = null; }
   saveData();
   renderMapList(); renderMarkers(); updateTopbar();
   // switch back to view and refresh
@@ -1111,15 +1238,19 @@ function updateAdminMapPreview() {
   if (!mapId) { wrap.innerHTML = '<div class="map-select-hint">Select a map first</div>'; return; }
   const imgUrl = MAP_RADAR_IMGS[mapId];
   wrap.innerHTML = '<div class="coord-picker-area" id="coordPicker" onclick="pickCoords(event)"><img src="' + imgUrl + '" alt="map" draggable="false"><div class="coord-crosshair" id="coordCrosshair"></div></div>';
-  adminPickedX = null; adminPickedY = null; adminPickedLX = null; adminPickedLY = null;
+  adminPickedX = null; adminPickedY = null; adminPickedLX = null; adminPickedLY = null; adminPickedBX = null; adminPickedBY = null;
   adminClickState = 'land';
+  adminBounce = false;
+  document.getElementById('adminBounceToggle').classList.remove('active');
+  document.getElementById('adminBounceToggle').querySelector('.bounce-toggle-icon').textContent = '◇';
+  if (document.getElementById('adminPickerLabel')) document.getElementById('adminPickerLabel').textContent = 'POSITION ON MAP - 1st click = LAND, 2nd click = THROW';
   document.getElementById('coordX').textContent = '-';
   document.getElementById('coordY').textContent = '-';
   document.getElementById('coordLX').textContent = '-';
   document.getElementById('coordLY').textContent = '-';
 }
 
-let adminClickState = 'land'; // first click = land now
+let adminClickState = 'land'; // first click = land
 
 function pickCoords(e) {
   const picker = document.getElementById('coordPicker');
@@ -1140,12 +1271,28 @@ function pickCoords(e) {
     }
     lch.style.left = x + '%'; lch.style.top = y + '%';
     adminClickState = 'throw';
-  } else {
+
+  } else if (adminClickState === 'throw') {
     adminPickedX = x; adminPickedY = y;
     document.getElementById('coordX').textContent = x + '%';
     document.getElementById('coordY').textContent = y + '%';
     let ch = document.getElementById('coordCrosshair');
     if (ch) { ch.style.display = 'block'; ch.style.left = x + '%'; ch.style.top = y + '%'; }
+    drawPickerLine();
+    adminClickState = adminBounce ? 'bounce' : 'land';
+
+  } else if (adminClickState === 'bounce') {
+    adminPickedBX = x; adminPickedBY = y;
+    document.getElementById('coordBX').textContent = x + '%';
+    document.getElementById('coordBY').textContent = y + '%';
+    let bch = document.getElementById('coordBounceCrosshair');
+    if (!bch) {
+      bch = document.createElement('div');
+      bch.id = 'coordBounceCrosshair';
+      bch.style.cssText = 'position:absolute;transform:translate(-50%,-50%) rotate(45deg);width:12px;height:12px;border:2px solid rgba(255,255,255,0.8);pointer-events:none;background:rgba(255,255,255,0.2);';
+      document.getElementById('coordPicker').appendChild(bch);
+    }
+    bch.style.left = x + '%'; bch.style.top = y + '%';
     drawPickerLine();
     adminClickState = 'land';
   }
@@ -1153,15 +1300,19 @@ function pickCoords(e) {
 
 function drawPickerLine() {
   if (adminPickedX == null || adminPickedLX == null) return;
-  let line = document.getElementById('pickerLine');
-  if (!line) {
-    const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  let svg = document.getElementById('pickerLine');
+  if (!svg) {
+    svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
     svg.id = 'pickerLine';
     svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;';
     document.getElementById('coordPicker').appendChild(svg);
-    line = svg;
   }
-  line.innerHTML = '<line x1="' + adminPickedX + '%" y1="' + adminPickedY + '%" x2="' + adminPickedLX + '%" y2="' + adminPickedLY + '%" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-dasharray="5,4"/>';
+  if (adminPickedBX != null) {
+    // throw → bounce → land
+    svg.innerHTML = '<polyline points="' + adminPickedX + '% ' + adminPickedY + '%, ' + adminPickedBX + '% ' + adminPickedBY + '%, ' + adminPickedLX + '% ' + adminPickedLY + '%" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-dasharray="5,4"/>';
+  } else {
+    svg.innerHTML = '<line x1="' + adminPickedX + '%" y1="' + adminPickedY + '%" x2="' + adminPickedLX + '%" y2="' + adminPickedLY + '%" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-dasharray="5,4"/>';
+  }
 }
 
 function saveLineup() {
@@ -1185,13 +1336,13 @@ function saveLineup() {
 
   // Check if there's an existing land position nearby - offer to group
   let finalLx = adminPickedLX, finalLy = adminPickedLY;
-  const existing = findExistingGroupLand(mapId, adminPickedLX, adminPickedLY);
+  const existing = findExistingGroupLand(mapId, type, adminPickedLX, adminPickedLY);
   if (existing) {
     const join = confirm('There is an existing land position nearby. Add this lineup to the existing group at this location?');
     if (join) { finalLx = existing.lx; finalLy = existing.ly; }
   }
 
-  lineups.push({ id:'l'+Date.now(), map:mapId, type, name, segment:seg, stage, mediaType, video, images, x:adminPickedX, y:adminPickedY, lx:finalLx, ly:finalLy, notes });
+  lineups.push({ id:'l'+Date.now(), map:mapId, type, name, segment:seg, stage, mediaType, video, images, x:adminPickedX, y:adminPickedY, lx:finalLx, ly:finalLy, bx:adminPickedBX, by:adminPickedBY, notes });
   saveData();
   document.getElementById('adminMap').value = '';
   document.getElementById('adminName').value = '';
